@@ -1,4 +1,18 @@
-doc_web
-=======
-
-关于web开发的知识积累总结
+* fastcgi
+	* [fastcgi概述](fastcgi/summary.md)
+	* [fastcgi安装](fastcgi/install.md)
+	* [fastcgi配置](fastcgi/config.md)
+	* [fastcgi日志](fastcgi/log.md)
+	* [fastcgi和php的关系](fastcgi/php.md)
+* php语法
+	* [php版本历史](phpbase/version.md)
+	* [php常量](phpbase/constant.md)
+	* [php变量](phpbase/variable.md)
+	* [php函数](phpbase/function.md)
+	* [php流程控制](phpbase/flow.md)
+	* [php对象](phpbase/object.md)
+* php进阶语法
+	* [php字符串](phphigh/string.md)
+	* [php正则](phphigh/regex.md)
+	* [php数据库](phphigh/sql.md)
+* 参考资料

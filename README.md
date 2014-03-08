@@ -15,4 +15,7 @@
 	* [php字符串](phphigh/string.md)
 	* [php正则](phphigh/regex.md)
 	* [php数据库](phphigh/sql.md)
+* sphinx
+	* [sphinx安装](sphinx/install.md)
+	* [sphinx配置文件全解析](sphinx/conf.md)
 * 参考资料

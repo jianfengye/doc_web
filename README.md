@@ -18,4 +18,6 @@
 * sphinx
 	* [sphinx安装](sphinx/install.md)
 	* [sphinx配置文件全解析](sphinx/conf.md)
+* nginx
+	* [nginx](nginx/install.md)
 * 参考资料

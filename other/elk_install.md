@@ -12,20 +12,20 @@ elk是指logstash,elasticsearch,kibana三件套，这三件套可以组成日志
 
 下载[elasticsearch 1.4.2](http://www.elasticsearch.org/overview/elkdownloads/)
 
-<code>
+`
 tar -xf elasticsearch-1.4.2.tar.gz
 mv elasticsearch-1.4.2 /usr/local/
 ln -s /usr/local/elasticsearch-1.4.2 /usr/local/elasticsearch
-</code>
+`
 
 安装[elasticsearch-servicewrapper](https://github.com/elasticsearch/elasticsearch-servicewrapper)
-<code>
+`
 下载解压到/usr/local/elasticsearch/bin文件夹下
 /usr/local/elasticsearch/bin/service/elasticsearch start
-</code>
+`
 
 测试elasticsearch
-<code>
+`
 [root@localhost service]# curl -X GET http://localhost:9200/
 {
   "status" : 200,
@@ -40,30 +40,30 @@ ln -s /usr/local/elasticsearch-1.4.2 /usr/local/elasticsearch
   },
   "tagline" : "You Know, for Search"
 }
-</code>
+`
 
 安装到自启动项
-<code>
+`
 下载解压到/usr/local/elasticsearch/bin文件夹下
 /usr/local/elasticsearch/bin/service/elasticsearch install
-</code>
+`
 
 
 # 安装logstash
 
 下载[logstash 1.4.2](http://www.elasticsearch.org/overview/elkdownloads/)
 
-<code>
+`
 tar -xf logstash-1.4.2
 mv logstash-1.4.2 /usr/local/
 ln -s /usr/local/logstash-1.4.2 /usr/local/elasticsearch
-</code>
+`
 
 测试logstash
 
-<code>
+`
 bin/logstash -e 'input { stdin { } } output { stdout {} }'
-</code>
+`
 
 配置logstash
 

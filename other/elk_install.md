@@ -1,4 +1,4 @@
-＃ logstash,elasticsearch,kibana三件套
+# logstash,elasticsearch,kibana三件套
 
 elk是指logstash,elasticsearch,kibana三件套，这三件套可以组成日志分析和监控工具
 

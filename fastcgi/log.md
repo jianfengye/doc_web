@@ -1,4 +1,4 @@
-# fastcgi的错误处理
+# fastcgi的错误处理[未发布]
 
 其实说fastcgi的错误处理，在nginx+fastcgi+php的模型中，实际上是php中抛出错误，然后由fastcgi将这个错误打出到nginx中，再由nginx进行错误日志收集。在这个模型中，我们需要研究下有哪几个开关会影响日志错误的收集，以及有几个地方会产生日志。
 

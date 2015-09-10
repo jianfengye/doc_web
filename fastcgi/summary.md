@@ -1,4 +1,4 @@
-# fastcgi概述
+# fastcgi概述[未发布]
 ## cgi
 cgi是通用网关接口，是连接web服务器和应用程序的接口。
 
@@ -46,11 +46,11 @@ fastcgi既然有独立进程池，那么它就需要有个master进程，master�
 - SunOne
 - Lighttpd
 - Premium thttpd
-- MyServer 
+- MyServer
 - Pi3Web
 - WebSTAR (Mac OS)
 - [Nginx](http://wiki.nginx.org/NginxHttpFcgiModule)
-- Cherokee 
+- Cherokee
 
 ##参考文章
 [fastcgi官网](http://www.fastcgi.com/drupal/node/2)

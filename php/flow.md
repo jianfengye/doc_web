@@ -1,4 +1,4 @@
-# php流程控制
+# php流程控制[未发布]
 
 php中函数的规则：
 
@@ -16,7 +16,7 @@ php中函数的规则：
 
 	<?php
 	$people = Array(
-	        Array('name' => 'Kalle', 'salt' => 856412), 
+	        Array('name' => 'Kalle', 'salt' => 856412),
 	        Array('name' => 'Pierre', 'salt' => 215863)
 	        );
 
@@ -88,5 +88,3 @@ php提供的流程控制的替代语法包括if, while, for, foreach, switch。�
 	<?php if ($a == 5): ?>
 	A ist gleich 5
 	<?php endif; ?>
-
-

@@ -1,4 +1,4 @@
-# php类
+# php类[未发布]
 
 php的[类与对象](http://www.php.net/manual/zh/language.oop5.php)是php5.0之后才引进的。
 
@@ -55,9 +55,9 @@ spl_autoload要求你的PHP版本大于5.1。
 	    $path = str_replace('_', '/', $class_name);
 	    require $path . '.php';
 	}
-	 
+
 	// 这里会自动加载Http/File/Interface.php 文件
-	 
+
 	$a = new Http_File_Interface();
 
 spl_autoload的使用：
@@ -68,17 +68,17 @@ spl_autoload的使用：
 	{
 	    public function callname(){
 	        echo "this is http";
-	    }   
+	    }
 	}
-	 
+
 	/*test.php*/
 	<?php
 	spl_autoload_register(function($class){
 	    if($class == 'http'){
 	        require_once("/home/yejianfeng/handcode/http.php");
-	    }   
+	    }
 	});
-	 
+
 	$a = new http();
 	$a->callname();
 
@@ -112,7 +112,7 @@ traits和use一起使用，能达到代码复用的目的，但是这个时候�
 
 ## 魔术方法有哪些？
 
-魔术方法        | 意义           
+魔术方法        | 意义
 ------------- |--------------
 \_\_construct() | 构造函数
 \_\_destruct() | 析构函数
@@ -158,7 +158,7 @@ traits和use一起使用，能达到代码复用的目的，但是这个时候�
 
 	<?php
 	class A {
-	        public $prop = "testA";
+	    public $prop = "testA";
 	}
 
 
@@ -184,5 +184,5 @@ traits和use一起使用，能达到代码复用的目的，但是这个时候�
 	testB
 	testC
 	 */
-	
+
 如果需要克隆的时候做任何操作，则可以在类中定义魔术方法“\_\_clone()”

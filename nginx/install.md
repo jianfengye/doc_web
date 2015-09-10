@@ -1,4 +1,4 @@
-# nginx源码安装
+# nginx源码安装[未发布]
 
 nginx使用1.6.2版本安装
 
@@ -53,32 +53,32 @@ nginx脚本设置到/home/yejianfeng/soft/nginx_script
 #
 # nginx - this script starts and stops the nginx daemon
 #
-# chkconfig:   - 85 15 
+# chkconfig:   - 85 15
 # description:  Nginx is an HTTP(S) server, HTTP(S) reverse \
 #               proxy and IMAP/POP3 proxy server
 # processname: nginx
 # config:      /etc/nginx/nginx.conf
 # config:      /etc/sysconfig/nginx
 # pidfile:     /var/run/nginx.pid
- 
+
 # Source function library.
 . /etc/rc.d/init.d/functions
- 
+
 # Source networking configuration.
 . /etc/sysconfig/network
- 
+
 # Check that networking is up.
 [ "$NETWORKING" = "no" ] && exit 0
- 
+
 nginx="/usr/local/nginx/sbin/nginx"
 prog=$(basename $nginx)
- 
+
 NGINX_CONF_FILE="/usr/local/nginx/conf/nginx.conf"
- 
+
 [ -f /etc/sysconfig/nginx ] && . /etc/sysconfig/nginx
- 
+
 lockfile=/var/lock/subsys/nginx
- 
+
 start() {
     [ -x $nginx ] || exit 5
     [ -f $NGINX_CONF_FILE ] || exit 6
@@ -89,7 +89,7 @@ start() {
     [ $retval -eq 0 ] && touch $lockfile
     return $retval
 }
- 
+
 stop() {
     echo -n $"Stopping $prog: "
     killproc $prog -QUIT
@@ -98,14 +98,14 @@ stop() {
     [ $retval -eq 0 ] && rm -f $lockfile
     return $retval
 }
- 
+
 restart() {
     configtest || return $?
     stop
     sleep 1
     start
 }
- 
+
 reload() {
     configtest || return $?
     echo -n $"Reloading $prog: "
@@ -113,23 +113,23 @@ reload() {
     RETVAL=$?
     echo
 }
- 
+
 force_reload() {
     restart
 }
- 
+
 configtest() {
   $nginx -t -c $NGINX_CONF_FILE
 }
- 
+
 rh_status() {
     status $prog
 }
- 
+
 rh_status_q() {
     rh_status >/dev/null 2>&1
 }
- 
+
 case "$1" in
     start)
         rh_status_q && exit 0

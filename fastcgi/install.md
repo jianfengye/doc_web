@@ -1,4 +1,4 @@
-# fastcgi安装
+# fastcgi安装[未发布]
 这里及以下的web服务器都是以nginx为例子和说明，php以5.3为例子。
 
 ## php-fpm
@@ -24,7 +24,7 @@ php需要下面软件的支持，如果没有安装，请自行安装：
 ### 编译安装php和php-fpm
 
 	[root@localhost local]#tar zxvf php-5.2.13.tar.gz  
-	[root@localhost local]#gzip -cd php-5.2.13-fpm-0.5.13.diff.gz | patch -d php-5.2.13 -p1 
+	[root@localhost local]#gzip -cd php-5.2.13-fpm-0.5.13.diff.gz | patch -d php-5.2.13 -p1
 	[root@localhost local]#cd php-5.2.13  
 	[root@localhost php-5.2.13]#./configure  --prefix=/usr/local/php --enable-fastcgi --enable-fpm  
 	[root@localhost php-5.2.13]#make  
@@ -40,16 +40,16 @@ php的配置文件存放在 /usr/local/php/lib/php.ini中。
 其中的几项配置需要注意：
 
 *标签listen_address*是配置fastcgi进程监听的IP地址以及端口，默认是127.0.0.1:9000。
-	
-	<value name="listen_address">127.0.0.1:9000</value> 
+
+	<value name="listen_address">127.0.0.1:9000</value>
 
 *标签display_errors*用来设置是否显示PHP错误信息，默认是0，不显示错误信息，设置为1可以显示PHP错误信息。
-	
+
 	<value name="display_errors">0</value>
 
 *标签user和group*用于设置运行FastCGI进程的用户和用户组。需要注意的是，这里指定的用户和用户组要和Nginx配置文件中指定的用户和用户组一致。
-	
-	<value name="user">nobody</value> 
+
+	<value name="user">nobody</value>
 	<value name="group">nobody</value>
 
 *标签max_children*用于设置FastCGI的进程数。根据官方建议，小于2GB内存的服务器，可以只开启64个进程，4GB以上内存的服务器可以开启200个进程。也可以根据服务的内存数来估计需要开启多少fastcgi进程数。大概一个fastcgi进程占20M的内存。

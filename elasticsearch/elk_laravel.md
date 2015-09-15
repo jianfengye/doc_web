@@ -1,4 +1,4 @@
-# elk和laravel的结合
+# elk和laravel的结合[未发布]
 
 elk是指logstash,elasticsearch,kibana三件套，这三件套可以组成日志分析和监控工具。laravel是现在非常火的php框架，两者如何结合呢？
 

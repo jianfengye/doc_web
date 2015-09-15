@@ -1,4 +1,4 @@
-# fastcgi和php的关系
+# fastcgi和php的关系[未发布]
 
 fastcgi就相当于是php的一个代理。cgi的最大的作用就是将web服务器和应用处理分开了。使得web服务器只需要关注http请求的IO，而应用处理只需要关注业务逻辑就好。
 

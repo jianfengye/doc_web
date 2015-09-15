@@ -1,4 +1,4 @@
-# php变量
+# php变量[未发布]
 
 php变量的规则有：
 
@@ -13,7 +13,7 @@ php的变量有几种类型：
 
 普通变量设置如下：
 
-	$a = 1;	
+	$a = 1;
 
 ## 类变量
 
@@ -47,4 +47,3 @@ PHP提供了大量的预定义变量这些变量将所有的外部变量转化�
 ### $_GET,$_POST,$_COOKIE和$_REQUEST的关系？
 
 默认情况下$_REQUEST包含了$_GET,$_POST,和$_COOKIE的数组。这个数组的项目以及顺序是依照php.ini中的[request_order](http://www.php.net/manual/zh/ini.core.php#ini.request-order)来做设置的。
-

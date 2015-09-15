@@ -40,4 +40,95 @@
 
 # 版本控制
 
-// TODO:
+上面可以看到es的文档中有个\_version字段，当两个并发请求要修改文档的时候，es使用的是乐观锁。
+在es中，更新请求实际上是分为两个阶段，获取文档，修改文档，然后保存文档。
+那么当两个更新请求同时要修改文档的时候，系统乐观的认为不会有两个并发请求对一个系统操作。
+
+文档原本的版本为1，请求A获取了version为1的文档，请求B也获取了version为1的文档，然后请求A修改完文档后，并且先执行了保存操作，这个时候，系统中的文档version变为了2。
+这个时候，B再执行保存操作的时候，告诉系统我要修改version为1的文档。系统就会抛出一个错误，说文档版本不匹配。然后这个错误由应用程序自己来进行控制。
+
+这种机制在请求量大的时候会比悲观锁机制好。但是缺点是需要程序处理版本冲突错误，可能一般的方法是封装更新操作，并且设置重复重试次数。
+
+# 增删改查操作
+
+## 增加：
+
+```
+POST /website/blog/ -d
+{
+    id: 123,
+    name: "blog123"
+}
+```
+
+增加操作如果制定的文档已经存在了，就会返回409错误
+
+## 删除:
+
+```
+DELETE /website/blog/123
+```
+
+如果文档没有存在，则返回404
+
+## 更新:
+
+```
+PUT /website/blog/123
+{
+  "title": "My first blog entry",
+  "text":  "I am starting to get the hang of this...",
+  "date":  "2014/01/02"
+}
+```
+
+更新的时候往往有个操作就是“如果有数据，则更新，如果没有数据，则创建”
+可以用upsert
+```
+curl -XPOST 'localhost:9200/test/type1/1/_update' -d '{
+    "script" : "ctx._source.counter += count",
+    "params" : {
+        "count" : 4
+    },
+    "upsert" : {
+        "counter" : 1   // 如果没有id为1的文档，则创建，并且设置counter为1
+    }
+}'
+
+
+curl -XPOST 'localhost:9200/test/type1/1/_update' -d '{
+    "doc" : {
+        "name" : "new_name"
+    },
+    "doc_as_upsert" : true  // 如果没有文档，则doc就是新的文档
+}'
+```
+
+更新必须明确的一点是，es中的文档的更新操作实际上是执行了两步，获取文档，更新文档，然后再保存文档。
+
+## 查:
+
+```
+GET /website/blog/123
+```
+
+如果你已经知道一批文档id了，那么你可以使用批量查的功能
+
+```
+GET /_mget
+{
+   "docs" : [
+      {
+         "_index" : "website",
+         "_type" :  "blog",
+         "_id" :    2
+      },
+      {
+         "_index" : "website",
+         "_type" :  "pageviews",
+         "_id" :    1,
+         "_source": "views"
+      }
+   ]
+}
+```

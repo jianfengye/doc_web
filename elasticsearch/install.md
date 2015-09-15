@@ -1,4 +1,4 @@
-# 安装elasticsearch中文IK和近义词配置[未发布]
+# 安装elasticsearch中文IK和近义词配置
 
 ## 安装java环境
 

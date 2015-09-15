@@ -1,48 +1,13 @@
-# elasticsearch 基础
+# elasticsearch 基础漫谈[未发布]
 
-# elasticsearch结构
+elasticsearch是一款基于lucence的搜索引擎。值得称道的是，lucence只有1MB左右大小，但是却富含了非常全的搜索功能，包括分词，近义词等。
+lucence是java编写的，功能和[API](https://lucene.apache.org/core/4_0_0/core/)也非常复杂，不易于使用。
 
-结构分为几级：
-* index 索引（DB）
-* type 类型（表）
-* document 文档（行）
-* field 字段（属性）
+elasticsearch在lucence之外封装了一层，使得请求可以通过最简单的HTTP Restful风格的请求对索引进行增删改查等操作。
 
-# 基本搜索
+elasticsearch一出来就和solr进行比较。solr也是基于lucence的分布式搜索引擎。但是要比较的话，elasticsearch还是更胜一筹。
+elasticsearch一出来就是支持分布式的。es的集群管理并不需要使用zookeeper等第三方工具的介入，而是内置的。
+当你在多台服务器上配置好了，他们会进行自动发现并组成集群的。
 
-## /?pretty
-
-    [yejianfeng@iZ23u681ae1Z ~]$ curl -u baichebao_admin 'http://localhost:9200/?pretty'
-    Enter host password for user 'baichebao_admin':
-    {
-      "status" : 200,
-      "name" : "Blur",
-      "cluster_name" : "elasticsearch",
-      "version" : {
-        "number" : "1.5.2",
-        "build_hash" : "62ff9868b4c8a0c45860bebb259e21980778ab1c",
-        "build_timestamp" : "2015-04-27T09:21:06Z",
-        "build_snapshot" : false,
-        "lucene_version" : "4.10.4"
-      },
-      "tagline" : "You Know, for Search"
-    }
-
-显示elasticsearch的版本和信息
-
-## /_status?pretty
-
-显示的一些字段：
-
-indices 表示有哪些索引
-// 表示有多少文档
-docs: {
-    num_docs: 582829, // 文档数
-    max_doc: 582829, // 最大时候的文档数
-    deleted_docs: 0 // 删除的文档数
-},
-
-index: {
-    primary_size_in_bytes: 297103210,
-    size_in_bytes: 297103210
-},
+elasticsearch中的索引数据是json形式保存的。它自带id，你也可以给他配置文档中某个字段为id。
+它有索引，类型，文档，字段的概念。相对应于关系数据库中的表，类型，数据，属性的概念。

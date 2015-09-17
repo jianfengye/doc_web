@@ -1,4 +1,4 @@
-# elasticsearch中的API
+# elasticsearch中的API[未发布]
 
 es中的API按照大类分为下面几种：
 
@@ -44,7 +44,7 @@ multiGet的时候内部的行为是将一个请求分为多个，到不同的nod
 
 对应的接口[说明和例子](https://www.elastic.co/guide/en/elasticsearch/reference/current/search.html)
 
-# 索引接口
+# 索引API
 
 * 创建索引接口(POST my_index)
 * 删除索引接口(DELETE my_index)

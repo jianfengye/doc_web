@@ -10,4 +10,4 @@ elasticsearch是基于lucene的，所以他的评分机制也是基于lucene的�
 
 ```tex
 score(q,d)   =   coord(q,d) ·  queryNorm(q) ·  \sum_{t\space in\space q}(tf(t\space in\space d) ·  idf(t)^2·  t.getBoost() ·  norm(t,d))
-```tex
+```

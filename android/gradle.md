@@ -1,4 +1,4 @@
-# Gradle目录解析
+# Gradle目录解析(未发布)
 
 Gradle 是以 Groovy 语言为基础，面向Java应用为主。基于DSL（领域特定语言）语法的自动化构建工具。
 Gradle这个工具集成了构建，测试，发布和其他，比如软件打包，生成注释文档等功能。
@@ -132,3 +132,4 @@ iml是Intellij模块文件。Intellij是一款JAVA的IDE。Android Studio是基�
 [IDEA 及 Gradle 使用总结](http://www.jiechic.com/archives/the-idea-and-gradle-use-summary)
 [使用 Gradle 管理你的 Android Studio 工程](http://www.open-open.com/lib/view/open1437144995334.html)
 [史上最详细的Android Studio系列教程四--Gradle基础](http://segmentfault.com/a/1190000002439306)
+[用Gradle 构建你的android程序](http://www.cnblogs.com/youxilua/archive/2013/05/20/3087935.html)

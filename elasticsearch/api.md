@@ -1,4 +1,4 @@
-# elasticsearch中的API[未发布]
+# elasticsearch中的API
 
 es中的API按照大类分为下面几种：
 

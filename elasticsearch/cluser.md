@@ -1,4 +1,4 @@
-# elasticsearch 集群[未发布]
+# elasticsearch 集群
 
 搭建elasticsearch的集群
 

@@ -1,4 +1,4 @@
-# elasticsearch 文档[未发布]
+# elasticsearch 文档
 
 # 文档格式
 

@@ -1,4 +1,4 @@
-# elasticsearch 查询（match和term）[未发布]
+# elasticsearch 查询（match和term）
 
 es中的查询请求有两种方式，一种是简易版的查询，另外一种是使用JSON完整的请求体，叫做结构化查询（DSL）。
 由于DSL查询更为直观也更为简易，所以大都使用这种方式。

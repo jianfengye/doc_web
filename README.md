@@ -1,23 +1,4 @@
-* fastcgi
-	* [fastcgi概述](fastcgi/summary.md)
-	* [fastcgi安装](fastcgi/install.md)
-	* [fastcgi配置](fastcgi/config.md)
-	* [fastcgi日志](fastcgi/log.md)
-	* [fastcgi和php的关系](fastcgi/php.md)
-* php语法
-	* [php版本历史](phpbase/version.md)
-	* [php常量](phpbase/constant.md)
-	* [php变量](phpbase/variable.md)
-	* [php函数](phpbase/function.md)
-	* [php流程控制](phpbase/flow.md)
-	* [php对象](phpbase/object.md)
-* php进阶语法
-	* [php字符串](phphigh/string.md)
-	* [php正则](phphigh/regex.md)
-	* [php数据库](phphigh/sql.md)
-* sphinx
-	* [sphinx安装](sphinx/install.md)
-	* [sphinx配置文件全解析](sphinx/conf.md)
-* nginx
-	* [nginx](nginx/install.md)
-* 参考资料
+# WEB知识大全
+
+* 这里汇集了WEB知识
+* 涉及mysql，nginx等方方面面

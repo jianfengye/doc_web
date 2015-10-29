@@ -1,4 +1,4 @@
-# flexbox简介(未发布)
+# flexbox简介
 
 # 什么是flexbox
 

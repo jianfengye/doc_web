@@ -1,4 +1,4 @@
-# mysql的timeout[未发布]
+# mysql的timeout
 
 很多时候我们连接mysql会在timeout这里跌倒，这里明确下mysql的timeout：
 

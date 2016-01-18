@@ -1,6 +1,7 @@
 # elasticsearch 基础漫谈[未发布]
 
-elasticsearch是一款基于lucence的搜索引擎。值得称道的是，lucence只有1MB左右大小，但是却富含了非常全的搜索功能，包括分词，近义词等。
+elasticsearch是一款基于lucence的搜索引擎。
+值得称道的是，lucence只有1MB左右大小，但是却富含了非常全的搜索功能，包括分词，近义词等。
 lucence是java编写的，功能和[API](https://lucene.apache.org/core/4_0_0/core/)也非常复杂，不易于使用。
 
 elasticsearch在lucence之外封装了一层，使得请求可以通过最简单的HTTP Restful风格的请求对索引进行增删改查等操作。

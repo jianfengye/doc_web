@@ -177,8 +177,6 @@ mysql> select * from GLOBAL_VARIABLES;
 描述了具有约束的健。
 
 
-
-
 # 参考文章
 
 [MySQL Study之--MySQL schema_information数据库](http://tiany.blog.51cto.com/513694/1677634)

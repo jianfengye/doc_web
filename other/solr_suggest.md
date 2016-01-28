@@ -1,4 +1,4 @@
-# solr的suggest模块[未发布]
+# solr的suggest模块
 
 solr有个suggest模块，用来实现下拉提醒功能，就是输入了一个文本之后，进行文本建议查找的功能。
 

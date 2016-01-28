@@ -1,4 +1,4 @@
-# fastcgi安装[未发布]
+# fastcgi安装
 这里及以下的web服务器都是以nginx为例子和说明，php以5.3为例子。
 
 ## php-fpm

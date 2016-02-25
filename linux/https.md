@@ -1,4 +1,4 @@
-# HTTPS协议说明[未发布]
+# HTTPS协议说明
 
 基本现在最安全的网络连接就是使用https了，http协议有几个不安全的地方：
 
@@ -19,7 +19,7 @@ TLS算法就是通过证书的方式和非对称加密的方式让双方生成3�
 
 # TLS算法
 
-[HandShake Protocol](https://i-technet.sec.s-msft.com/dynimg/IC196340.gif)
+![HandShake Protocol](https://i-technet.sec.s-msft.com/dynimg/IC196340.gif)
 
 这个图就是非常经典的客户端和服务端进行安全握手的请求过程。
 

@@ -2,7 +2,7 @@
 
 PHP的错误机制也是非常复杂的，做了几年php，也没有仔细总结过，现在就补上这一课。
 
-特别说明：文章的PHP版本使用5.5
+特别说明：文章的PHP版本使用5.5.32
 
 # PHP的错误级别
 
@@ -107,7 +107,7 @@ testCall($b);
 
 这个错误表示你用了一个旧版本的函数，而这个函数后期版本可能被禁用或者不维护了。
 
-比如curl的CURLOPT_POSTFIELDS使用@FILENAME来上传文件的方法
+比如curl的CURLOPT_POSTFIELDS使用\@FILENAME来上传文件的方法
 
 ```
 // Deprecated: curl_setopt(): The usage of the @filename API for file uploading is deprecated. Please use the CURLFile class instead in /tmp/php/index.php on line 42

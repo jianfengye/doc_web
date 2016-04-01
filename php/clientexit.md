@@ -211,3 +211,7 @@ close(5)                                = 0
 ```
 
 第二次往socket中发送2222的时候显示了Broken pipe，就是程序告诉我们，这个socket已经不能使用了，顺便php中的connection_status就会被设置为1了。后续的写操作也都不会再执行了。
+
+# 总结
+
+正常情况下，如果客户端client异常推出了，服务端的程序还是会继续执行，执行直到与IO进行了两次交互操作，服务端发现客户端已经断开连接，这个时候会触发一个user_abort，如果这个没有设置ignore_user_abort，那么这个php-fpm的程序才会被中断。

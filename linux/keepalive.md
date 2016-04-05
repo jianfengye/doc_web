@@ -1,4 +1,4 @@
-# 大话keepalive[未发布]
+# 大话keepalive
 
 我们说到keepalive的时候，需要先明确一点，这个keepalive说的是tcp的还是http的。
 

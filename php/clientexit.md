@@ -1,8 +1,12 @@
-# 客户端浏览器退出之后都发生了什么
+# 浏览器退出之后php还会继续执行么？
 
 前提：这里说的是典型的lnmp结构，nginx+php-fpm的模式
 
-今天遇到的提问就是，如果我有个php程序执行地非常慢，甚至于在代码中sleep()，然后浏览器连接上服务的时候，会启动一个php-fpm进程，但是这个时候，如果浏览器关闭了，那么请问，这个时候服务端的这个php-fpm进程是否还会继续运行呢？
+如果我有个php程序执行地非常慢，甚至于在代码中sleep()，然后浏览器连接上服务的时候，会启动一个php-fpm进程，但是这个时候，如果浏览器关闭了，那么请问，这个时候服务端的这个php-fpm进程是否还会继续运行呢？
+
+今天就是要解决这个问题。
+
+# 最简单的实验
 
 最简单的方法就是做实验，我们写一个程序：在sleep之前和之后都用file_put_contents来写入日志：
 
@@ -13,11 +17,13 @@ sleep(3);
 file_put_contents('/tmp/test.log', '2222' . PHP_EOL, FILE_APPEND | LOCK_EX);
 ```
 
-好了，实际操作的结果是，我们在服务器sleep的过程中，关闭客户端浏览器，2222还是会被写入日志中的。即后台的php还是会继续运行的。
+实际操作的结果是，我们在服务器sleep的过程中，关闭客户端浏览器，2222是会被写入日志中。
+
+那么就意味着浏览器关闭以后，服务端的php还是会继续运行的?
 
 # ignore_user_abort
 
-事情并没有这样完结，在老王和diogin的提醒下，说这个可能会和php的ignore_user_abort相关。
+老王和diogin提醒，这个可能是和php的ignore_user_abort函数相关。
 
 于是我就把代码稍微改成这样的：
 
@@ -31,19 +37,22 @@ file_put_contents('/tmp/test.log', '2222' . PHP_EOL, FILE_APPEND | LOCK_EX);
 
 发现并没有任何软用，不管设置ignore_user_abort为何值，都是会继续执行的。
 
-由此就有一个疑问了user_abort是什么？
+但是这里有一个疑问: user_abort是什么？
 
 ![](http://i3.piimg.com/e5aa1ad98005660d.png)
 
 文档对cli模式的abort说的很清楚，当php脚本执行的时候，用户终止了这个脚本的时候，就会触发abort了。然后脚本根据ignore_user_abort来判断是否要继续执行。
 
-但是对cgi模式的abort并没有说清楚。感觉过去，即使客户端断开连接了，在cgi模式的php是不会收到abort的。
+但是官方文档对cgi模式的abort并没有描述清楚。感觉即使客户端断开连接了，在cgi模式的php是不会收到abort的。
+难道ignore_user_abort在cgi模式下是没有任何作用的？
 
 # 是不是心跳问题呢？
 
 首先想到的是不是心跳问题呢？我们断开浏览器客户端，等于在客户端没有close而断开了连接，服务端是需要等待tcp的keepalive到达时长之后才会检测出来的。
 
-好，那么我们就先排除浏览器问题，写一个client程序，连接上http服务之后，发送一个header头，sleep1秒就主动close连接。
+好，需要先排除浏览器设置的keepalive问题。
+
+抛弃浏览器，简单写一个client程序：程序连接上http服务之后，发送一个header头，sleep1秒就主动close连接，而这个程序并没有带http的keepalive头。
 
 程序如下：
 
@@ -63,13 +72,23 @@ func main() {
 }
 ```
 
-使用这个模拟浏览器发送请求，发现仍然还是一样，php还是不管是否设置ignore_user_abort，会继续执行完成整个脚本。
+服务端程序：
+
+```
+<?php
+ignore_user_abort(false);
+file_put_contents('/tmp/test.log', '11111' . PHP_EOL, FILE_APPEND | LOCK_EX);
+sleep(3);
+file_put_contents('/tmp/test.log', '2222' . PHP_EOL, FILE_APPEND | LOCK_EX);
+```
+
+发现仍然还是一样，php还是不管是否设置ignore_user_abort，会继续执行完成整个脚本。看来ignore_user_abort还是没有生效。
 
 # 如何触发ignore_user_abort
 
-问题就聚焦到我们如何触发ignore_user_abort了，那么服务端这边怎么知晓这个socket不能使用了呢？自然就会想到是不是需要服务端主动和socket进行交互，才会判断出这个socket是否可以使用。
+那该怎么触发ignore_user_abort呢？服务端这边怎么知晓这个socket不能使用了呢？老王和diogin说是不是需要服务端主动和socket进行交互，才会判断出这个socket是否可以使用？
 
-我们还发现，php提供了connection_status和connection_aborted两个方法，这两个方法都能检测出当前的连接状态。于是我们的打日志的程序其实就可以改成：
+另外，我们还发现，php提供了connection_status和connection_aborted两个方法，这两个方法都能检测出当前的连接状态。于是我们的打日志的那行代码就可以改成：
 
 ```
 file_put_contents('/tmp/test.log', '1 connection status: ' . connection_status() . "abort:" . connection_aborted() . PHP_EOL, FILE_APPEND | LOCK_EX);
@@ -118,16 +137,15 @@ for($i = 0; $i < 10; $i++) {
 
 # RST
 
-我们抓包看
+我们使用wireshark抓包看整个客户端和服务端交互的过程
 
 ![](http://i3.piimg.com/eca4e0ba0e96e77a.png)
 
 这整个过程只有发送14个包，我们看下服务端第一次发送22222的时候，客户端返回的是RST。后面就没有进行后续的包请求了。
 
-大概的交互流程是：
+于是理解了，客户端和服务端大概的交互流程是：
 
 当服务端在循环中第一次发送2222的时候，客户端由于已经断开连接了，返回的是一个RST，但是这个发送过程算是请求成功了。直到第二次服务端再次想往这个socket中进行write操作的时候，这个socket就不进行网络传输了，直接返回说connection的状态已经为abort。所以就出现了上面的情况，第一次222是status为0，第二次的时候才出现abort。
-
 
 # strace进行验证
 
@@ -210,8 +228,10 @@ write(5, "2 connection status: 1abort:1\n", 30) = 30
 close(5)                                = 0
 ```
 
-第二次往socket中发送2222的时候显示了Broken pipe，就是程序告诉我们，这个socket已经不能使用了，顺便php中的connection_status就会被设置为1了。后续的写操作也都不会再执行了。
+第二次往socket中发送2222的时候显示了Broken pipe。这就是程序告诉我们，这个socket已经不能使用了，顺便php中的connection_status就会被设置为1了。后续的写操作也都不会再执行了。
 
 # 总结
 
-正常情况下，如果客户端client异常推出了，服务端的程序还是会继续执行，执行直到与IO进行了两次交互操作，服务端发现客户端已经断开连接，这个时候会触发一个user_abort，如果这个没有设置ignore_user_abort，那么这个php-fpm的程序才会被中断。
+正常情况下，如果客户端client异常推出了，服务端的程序还是会继续执行，直到与IO进行了两次交互操作。服务端发现客户端已经断开连接，这个时候会触发一个user_abort，如果这个没有设置ignore_user_abort，那么这个php-fpm的程序才会被中断。
+
+至此，问题结了。

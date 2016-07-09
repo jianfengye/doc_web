@@ -41,4 +41,4 @@ TCP是可靠的，因此，它对于发出去的信息，没有得到正常ACK�
 [TCP/IP详解](http://www.cs.newpaltz.edu/~pletcha/NET_PY/the-protocols-tcp-ip-illustrated-volume-1.9780201633467.24290.pdf)
 [TCP/IP详解学习笔记(13)-TCP坚持定时器，TCP保活定时器](http://www.cnblogs.com/android-blogs/p/5477786.html)
 [TCP 的那些事儿（下）](http://coolshell.cn/articles/11609.html)
-[TCP/IP重传超时--RTO](TCP/IP重传超时--RTO)
+[TCP/IP重传超时--RTO](http://www.orczhou.com/index.php/2011/10/tcpip-protocol-start-rto/)

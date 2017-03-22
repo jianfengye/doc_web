@@ -2,7 +2,7 @@
 
 redis是php的好朋友，在php写业务过程中，有时候会使用到锁的概念，同时只能有一个人可以操作某个行为。这个时候我们就要用到锁。锁的方式有好几种，php不能在内存中用锁，不能使用zookeeper加锁，使用数据库做锁又消耗比较大，这个时候我们一般会选用redis做锁机制。
 
-## setnx
+# setnx
 
 锁在redis中最简单的数据结构就是string。最早的时候，上锁的操作一般使用setnx，这个命令是当:lock不存在的时候set一个val，或许你还会记得使用expire来增加锁的过期，解锁操作就是使用del命令，伪代码如下：
 
@@ -17,7 +17,7 @@ if (Redis::setnx("my:lock", 1)) {
 
 这里其实是有问题的，问题就在于setnx和expire中间如果遇到crash等行为，可能这个lock就不会被释放了。于是进一步的优化方案可能是在lock中存储timestamp。判断timestamp的长短。
 
-## set
+# set
 
 现在官方建议直接使用[set](https://redis.io/commands/set)来实现锁。我们可以使用set命令来替代setnx，就是下面这个样子
 

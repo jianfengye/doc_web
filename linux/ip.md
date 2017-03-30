@@ -1,4 +1,4 @@
-# 运营商的ip那点事
+# 查询运营商的ip段
 
 所有的IP地址都是通过国际组织NIC(Network Information Center)统一分配的，目前世界上有三个这样的网络信息中心：
 

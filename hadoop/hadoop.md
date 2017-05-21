@@ -30,3 +30,17 @@ hdfs基本还是主从结构，有一个namenode，和多个datanode。所有对
 mapreduce是一个计算框架，它分为map部分和reduce。map阶段相当于把数据进行整理的阶段，各种相同的数据都整理在一起，reduce相当于是统计阶段，统计出每个数据需要的数据。其中，map整理完的数据，哪个reduce处理哪个整理完的数据，这个过程叫做shuffle。
 
 ![mapreduce](http://s4.51cto.com/wyfs02/M02/88/CA/wKioL1f_pvjwCD-aAAB4Ex39Pjo266.png-s_3799577462.png)
+
+# hadoop安装完成之后的web访问地址
+
+##  查看hdfs的概况
+```
+http://10.94.120.194:50070/
+```
+
+这里面有一个工具可以浏览hdfs的文件: http://10.94.120.194:50070/explorer.html#/
+
+## 查看yarn
+```
+http://10.94.120.194:8088/
+```

@@ -42,25 +42,13 @@ maven的打包需要使用到一个maven插件，maven-assembly-plugin。
 			<artifactId>maven-assembly-plugin</artifactId>
 			<version>3.1.0</version>
 			<configuration>
-          <descriptorRefs>
-            <descriptorRef>jar-with-dependencies</descriptorRef>
-          </descriptorRefs>
-          <archive>
-          	<manifest>
-          		<mainClass>com.didichuxing.flowduration.realtime.Realtime</mainClass>
-          	</manifest>
-          </archive>
+	          <descriptorRefs>
+	            <descriptorRef>jar-with-dependencies</descriptorRef>
+	          </descriptorRefs>
         </configuration>
-        <executions>
-          <execution>
-            <id>make-assembly</id> <!-- this is used for inheritance merges -->
-            <phase>package</phase> <!-- bind to the packaging phase -->
-            <goals>
-              <goal>single</goal>
-            </goals>
-          </execution>
-        </executions>
 		</plugin>
 	</plugins>
 </build>
 ```
+
+上面是最简单的引入assembly-plugin的方法，引入了maven-assembly-plugin的3.1.0版本，其对应的配置我们配置了一个descriptorRefs, 定义了生成的assembly的名字。就是我们最后生成的jar包会命名为[artifactId]-[version]-[descriptorRef].jar

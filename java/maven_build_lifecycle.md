@@ -77,3 +77,57 @@ mvn clean dependency:copy-dependencies package
 上图差不多就是基本的绑定设置。但是一些打包方式是不一样的设置。例如，纯元项目的打包方式（pom）只绑定了install和deploy构建阶段。
 
 注意，除了默认的，一些额外的打包方式也是可以额外获取。你可以使用pom文件的<build>标签来引入一个特定的插件，并且指定<extensions>true</extensions>。比如Plexus插件提供plexus-application和plexus-service打包方式。
+
+# Plugins
+
+第二种把目标增加到构建阶段的方法是在你的项目中配置插件。插件就是提供目标给maven的项目。或者说，插件可以有一个或者多个目标，每个目标代表插件的一种能力。例如，Compiler插件有两个目标：compile和testCompile。前者编译你的主代码，后者编译你的测试代码。
+
+在后面的章节你会看到，插件包含希望在什么构建阶段插入目标的信息。注意，插件自己并没有这个信息－你必须指定你想要在哪个编译阶段使用这个目标。
+
+目标可以配置到那些已经被Packaging绑定的构建阶段中。如果多个目标绑定到一个特定阶段，执行的顺序是，先执行packaging中的目标，再执行配置文件POM配置的目标。注意，你可以通过<execution>来控制某些特定目标的执行顺序。
+
+例如，Modello插件会将modello:java目标绑定到generate-source阶段（注意：modello:java目标会生成java代码）。所以，使用Modello插件并且让它生成代码并且将代码加入到build阶段，你需要加下面的<plugins>到<build>：
+```
+...
+ <plugin>
+   <groupId>org.codehaus.modello</groupId>
+   <artifactId>modello-maven-plugin</artifactId>
+   <version>1.8.1</version>
+   <executions>
+     <execution>
+       <configuration>
+         <models>
+           <model>src/main/mdo/maven.mdo</model>
+         </models>
+         <version>4.0.0</version>
+       </configuration>
+       <goals>
+         <goal>java</goal>
+       </goals>
+     </execution>
+   </executions>
+ </plugin>
+...
+```
+你也许会很好奇为什么<execution>标签存在。这样你就可以根据不同的配置文件执行多次相同的目标。每个excuteion可以配置一个唯一的ID，在继承或者应用权限阶段，你可以控制是否合并目标配置文件，还是作为一个额外的执行。
+
+当多个executions被配置给一个单独的过程，它们会按照POM中配置的<executions>中的顺序执行。
+
+例如，modello:java，它只在generate-source构建阶段生效。但是一些目标却会在一个或者多个构建阶段执行，并且这些目标并不强制要求按照默认阶段执行。对这些，你就需要自己来配置了。例如，你有一个目标display:time，这个目标是打印当前时间到控制台，如果你希望它在process-test-resources阶段执行，以便告知什么时候测试开始执行，你就需要配置如下：
+```
+...
+ <plugin>
+   <groupId>com.mycompany.example</groupId>
+   <artifactId>display-maven-plugin</artifactId>
+   <version>1.0</version>
+   <executions>
+     <execution>
+       <phase>process-test-resources</phase>
+       <goals>
+         <goal>time</goal>
+       </goals>
+     </execution>
+   </executions>
+ </plugin>
+...
+```

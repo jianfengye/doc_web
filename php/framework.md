@@ -88,5 +88,3 @@ PHP遇到的第二个所经受的考验就是性能，业务量上来以后，�
 
 基本现在比较热门的就是符合rest的url路由解析，所谓的rest风格的路由解析，基本就是需要HTTP METHOD + HTTP REQUEST_URI 定位一个controller的action。
 把GET+/user/add 和 POST + /user/add 看作是一个请求并不是明智的。所以laravel和TP的这种路由定义比较符合这种需求的设计。
-
-# 关于ORM

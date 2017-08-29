@@ -50,7 +50,7 @@ PHP 5.5 增添了遍历一个数组的数组的功能并且把嵌套的数组解
 ## break
 
 break可以接受一个可选的数字来决定跳出几重循环，默认为1。其中从5.4后定义break 0 为不合法。
-
+```
 	<?php
 	$arr = array('one', 'two', 'three', 'four', 'stop', 'five');
 	while (list (, $val) = each($arr)) {
@@ -76,7 +76,7 @@ break可以接受一个可选的数字来决定跳出几重循环，默认为1�
 	    }
 	}
 	?>
-
+```
 ## continue
 
 
@@ -84,7 +84,8 @@ break可以接受一个可选的数字来决定跳出几重循环，默认为1�
 ## 流程控制的替代语法
 
 php提供的流程控制的替代语法包括if, while, for, foreach, switch。替代语法的基本形式是把左边括号（{）换成冒号（:），把右花括号（}）替换成 endif，endwhile，endfor，endforeach。以及 endswitch。
-
+```
 	<?php if ($a == 5): ?>
 	A ist gleich 5
 	<?php endif; ?>
+```

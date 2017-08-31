@@ -1,4 +1,4 @@
-# eclipse中创建maven项目(未发布)
+# maven使用实战
 
 # 创建项目
 
@@ -144,7 +144,7 @@ Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
 
 环节，这个是packaging为jar的默认构建阶段，我们使用mvn install, 就执行到install为止
 
-## 依赖包打包
+## 增加依赖库
 
 我们引用了一个json依赖包，修改pom增加json库：
 ```
@@ -164,7 +164,7 @@ public class App
     {
         System.out.println( "Hello World!" );
 
-        String json = "{'name':'xiazdong','age':20}";
+        String json = "{'name':'yejianfeng','age':20}";
         String name = getName(json);
         System.out.println("name is " + name);
 
@@ -203,3 +203,95 @@ public class AppTest extends TestCase
 ```
 mvn help:describe -Dplugin=org.jacoco:jacoco-maven-plugin -Ddetail
 ```
+
+我们着重看两个goal，一个是prepare-agent，一个是report
+
+prepare-agent的说明文档在：http://www.jacoco.org/jacoco/trunk/doc/prepare-agent-mojo.html，它的目标就是为测试的JVM设置属性和参数，做一些遇上线之前的操作。jacoco的原理大概就是在JVM前面启动一个agent，这个agent负责传递参数给JVM，和收集JVM的运行结果到本地。这个goal就是启动agent的过程。即使你没有需要传递的额外的参数，也需要在execute里面设置这个goal。
+
+report的说明文档在：http://www.jacoco.org/jacoco/trunk/doc/report-mojo.html，它的目标是为了使用agent的运行结果生成一个测试报告。也是必要的。当然，我们可以配置各个参数来设置这个结果的覆盖文件，编码，报告生成地址等。
+
+我们把pom里面的plugin改为下面的形式：
+```
+<plugin>
+    <groupId>org.jacoco</groupId>
+    <artifactId>jacoco-maven-plugin</artifactId>
+    <version>0.7.9</version>
+    <executions>
+        <execution>  
+            <id>pre-test</id>  
+            <goals>  
+              <goal>prepare-agent</goal>  
+            </goals>  
+          </execution>
+        <execution>  
+          <id>post-test</id>  
+          <phase>test</phase>  
+          <goals>  
+                <goal>report</goal>  
+          </goals>  
+        </execution>  
+   </executions>
+</plugin>
+```
+好，下面运行maven install, 就看到了生成的测试覆盖率报告了。
+
+![](http://tuchuang.funaio.cn/17-8-31/54457620.jpg)
+
+# 主清单属性
+
+当我们在命令行要运行这个jar的时候
+```
+java -jar target/maventest-0.0.1-SNAPSHOT.jar
+```
+发现提示错误:
+```
+target/maventest-0.0.1-SNAPSHOT.jar中没有主清单属性
+```
+这里提示我们没有设置主清单属性，就是没有设置主函数。
+（当然我们可以使用
+```
+java -cp target/maventest-0.0.1-SNAPSHOT.jar com.yejianfeng.maventest.App
+```
+来指定运行哪个类）
+
+我们需要一个插件来设置主清单，让我们的这个jar包变成可执行jar包（也叫uber-jar 或者 fat-jar）。这个插件的主页在：https://maven.apache.org/plugins/maven-shade-plugin/
+
+通过看文档，我们知道这个插件有两个goal，除了help目标之外，最有用的是shade目标。它默认绑定在package阶段的。这个goal有一个trasformer的配置，可以设置manifestEntity。这个实体可以告知这个库使用的主类是什么。
+
+```
+  <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-shade-plugin</artifactId>
+    <version>3.1.0</version>
+    <configuration>
+      <!-- put your configurations here -->
+    </configuration>
+    <executions>
+      <execution>
+        <phase>package</phase>
+        <goals>
+          <goal>shade</goal>
+        </goals>
+        <configuration>
+        	<transformers>
+        		<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+        			<manifestEntries>
+        				<Main-Class>com.yejianfeng.maventest.App</Main-Class>
+        			</manifestEntries>
+        		</transformer>
+        	</transformers>
+        </configuration>
+      </execution>
+    </executions>
+  </plugin>
+```
+
+好了，现在可以生成可执行jar包了
+
+```
+➜  maventest java -jar target/maventest-0.0.1-SNAPSHOT.jar
+Hello World!
+name is yejianfeng
+```
+
+而且这个jar包也包含了所有的依赖包。

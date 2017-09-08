@@ -70,3 +70,13 @@ Nothing是所有类型的子类。
 ![](http://tuchuang.funaio.cn/17-9-7/66201545.jpg)
 
 低精度类型往高精度数值类型转换的时候不需要额外定义，这点和java一样。
+
+## unit
+
+Scala的Unit就相当于Java中的void，主要不同的是Scala可以有一个Unit类型的值()。
+
+Unit一般是用在返回值的定义上。
+
+## Nothing, Null
+
+一般抛出异常，函数的返回值就是Nothing。 我们只要判断函数的返回值就知道函数是否返回异常了。

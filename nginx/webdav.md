@@ -57,7 +57,3 @@ PUT是用来更新服务器上的一个文件的，它不能作用于文件夹�
 使用nginx就能很简单搭建一个支持webdav的文件服务，但是这个webdav只支持几个方法：PUT，DELETE，MKCOL，COPY，MOVE。基于这几个操作，你可以很方便操作这个文件服务器。但是需要使用PROPFIND等命令，你就需要加上[nginx-dav-ext-module](https://github.com/arut/nginx-dav-ext-module)这个模块，只有支持了PROFIND命令，mac的finder才能打开webdav服务文件。
 
 nginx-dav-ext-module里面还有一个OPTIONS方法，这个是HTTP1.1的方法，服务端返回它支持的方法。
-
-## nginx 里面的PUT
-
-nginx原生的代码里面有实现PUT命令

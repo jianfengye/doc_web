@@ -483,4 +483,335 @@ func (c *Context) Next() {
 }
 ```
 
-每个请求进来，匹配好路由之后，会获取这个路由最终combine的handlers，把它放在全局的context中，然后通过调用context.Next()来进行递归调用这个handlers。
+每个请求进来，匹配好路由之后，会获取这个路由最终combine的handlers，把它放在全局的context中，然后通过调用context.Next()来进行递归调用这个handlers。当然在中间件里面需要记得调用context.Next() 把控制权还给Context。
+
+# 静态文件
+
+golang的http包中对静态文件的读取是有封装的：
+```
+func ServeFile(w ResponseWriter, r *Request, name string)
+```
+
+routerGroup也是有把这个封装成为方法的
+```
+func (group *RouterGroup) Static(relativePath, root string) IRoutes {
+	return group.StaticFS(relativePath, Dir(root, false))
+}
+
+func (group *RouterGroup) StaticFS(relativePath string, fs http.FileSystem) IRoutes {
+  ...
+	handler := group.createStaticHandler(relativePath, fs)
+  ...
+}
+
+func (group *RouterGroup) createStaticHandler(relativePath string, fs http.FileSystem) HandlerFunc {
+	...
+		fileServer.ServeHTTP(c.Writer, c.Request)
+	...
+}
+
+```
+
+所以调用应该像这样：
+```
+router.Static("/assets", "./assets")
+router.StaticFS("/more_static", http.Dir("my_file_system"))
+router.StaticFile("/favicon.ico", "./resources/favicon.ico")
+```
+
+其中的StaticFS的第二个参数可以是实现了http.FileSystem的任何结构。
+
+# 绑定
+
+参数一个一个获取是很麻烦的，我们一般还会把参数赋值到某个struct中，这个时候解析参数，赋值的过程很繁琐。我们是不是提供一个自动绑定的方法来操作呢？
+
+```
+package main
+
+import (
+	"log"
+	"time"
+
+	"github.com/gin-gonic/gin"
+)
+
+type Person struct {
+	Name     string    `form:"name"`
+	Address  string    `form:"address"`
+	Birthday time.Time `form:"birthday" time_format:"2006-01-02" time_utc:"1"`
+}
+
+func main() {
+	route := gin.Default()
+	route.GET("/testing", startPage)
+	route.Run(":8085")
+}
+
+func startPage(c *gin.Context) {
+	var person Person
+	// If `GET`, only `Form` binding engine (`query`) used.
+	// If `POST`, first checks the `content-type` for `JSON` or `XML`, then uses `Form` (`form-data`).
+	// See more at https://github.com/gin-gonic/gin/blob/master/binding/binding.go#L48
+	if c.ShouldBind(&person) == nil {
+		log.Println(person.Name)
+		log.Println(person.Address)
+		log.Println(person.Birthday)
+	}
+
+	c.String(200, "Success")
+}
+```
+
+```
+$ curl -X GET "localhost:8085/testing?name=appleboy&address=xyz&birthday=1992-03-15"
+```
+
+这个是不是很方便？它是怎么实现的呢？
+
+首先参数解析是和http请求的content-type头有关，当content-type头为application/json的时候，我们会在body中传递json，并且应该解析请求body中的json，而content-type头为application/xml的时候，我们会解析body中的xml。
+
+我们之前说了，这些解析的行为应该都是Context包了的。所以这些方法都定义在Context中
+```
+func (c *Context) ShouldBind(obj interface{}) error {
+	b := binding.Default(c.Request.Method, c.ContentType())
+	return c.ShouldBindWith(obj, b)
+}
+
+// ShouldBindJSON is a shortcut for c.ShouldBindWith(obj, binding.JSON).
+func (c *Context) ShouldBindJSON(obj interface{}) error {
+	return c.ShouldBindWith(obj, binding.JSON)
+}
+
+// ShouldBindXML is a shortcut for c.ShouldBindWith(obj, binding.XML).
+func (c *Context) ShouldBindXML(obj interface{}) error {
+	return c.ShouldBindWith(obj, binding.XML)
+}
+
+// ShouldBindQuery is a shortcut for c.ShouldBindWith(obj, binding.Query).
+func (c *Context) ShouldBindQuery(obj interface{}) error {
+	return c.ShouldBindWith(obj, binding.Query)
+}
+
+// ShouldBindWith binds the passed struct pointer using the specified binding engine.
+// See the binding package.
+func (c *Context) ShouldBindWith(obj interface{}, b binding.Binding) error {
+	return b.Bind(c.Request, obj)
+}
+```
+
+这里binding这块应该怎么设计呢？其实知道了具体的解析方式，就知道如何绑定，比如知道了这个是json解析，我就可以很方便将参数直接json.Decode，如果知道这个是query解析，我可以直接从URL.Query中获取请求串，如果知道这个是表单form，我就可以直接request.ParseForm来解析。
+
+所以，这个还是一个接口，多个结构实现的设计。
+
+定义一个接口：
+```
+type Binding interface {
+	Name() string
+	Bind(*http.Request, interface{}) error
+}
+```
+
+定一个多个结构：
+```
+type formBinding struct{}
+
+func (formBinding) Bind(req *http.Request, obj interface{}) error {
+	if err := req.ParseForm(); err != nil {
+		return err
+	}
+	req.ParseMultipartForm(defaultMemory)
+	if err := mapForm(obj, req.Form); err != nil {
+		return err
+	}
+	return validate(obj)
+}
+
+type jsonBinding struct{}
+
+func (jsonBinding) Bind(req *http.Request, obj interface{}) error {
+	return decodeJSON(req.Body, obj)
+}
+var (
+	JSON          = jsonBinding{}
+	XML           = xmlBinding{}
+	Form          = formBinding{}
+	Query         = queryBinding{}
+	FormPost      = formPostBinding{}
+	FormMultipart = formMultipartBinding{}
+	ProtoBuf      = protobufBinding{}
+	MsgPack       = msgpackBinding{}
+)
+...
+```
+在使用绑定解析的时候，我们可以使用ShouldBindWith来指定我们要使用的是哪些解析方式。
+
+# 参数验证
+
+我们希望在绑定参数的时候，也能给我做一下验证，有点像laravel里面的Validater一样，我在绑定的对象设置一下这个字段是否可以为空，是否必须是int等。官网的例子：
+```
+package main
+
+import (
+	"net/http"
+	"reflect"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"gopkg.in/go-playground/validator.v8"
+)
+
+// Booking contains binded and validated data.
+type Booking struct {
+	CheckIn  time.Time `form:"check_in" binding:"required,bookabledate" time_format:"2006-01-02"`
+	CheckOut time.Time `form:"check_out" binding:"required,gtfield=CheckIn" time_format:"2006-01-02"`
+}
+
+func bookableDate(
+	v *validator.Validate, topStruct reflect.Value, currentStructOrField reflect.Value,
+	field reflect.Value, fieldType reflect.Type, fieldKind reflect.Kind, param string,
+) bool {
+	if date, ok := field.Interface().(time.Time); ok {
+		today := time.Now()
+		if today.Year() > date.Year() || today.YearDay() > date.YearDay() {
+			return false
+		}
+	}
+	return true
+}
+
+func main() {
+	route := gin.Default()
+
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.RegisterValidation("bookabledate", bookableDate)
+	}
+
+	route.GET("/bookable", getBookable)
+	route.Run(":8085")
+}
+
+func getBookable(c *gin.Context) {
+	var b Booking
+	if err := c.ShouldBindWith(&b, binding.Query); err == nil {
+		c.JSON(http.StatusOK, gin.H{"message": "Booking dates are valid!"})
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+}
+```
+
+这种需要怎么做呢？
+
+首先当然在上面说的Bind的函数里面需要加上验证的逻辑，比如像jsonBinding:
+```
+func decodeJSON(r io.Reader, obj interface{}) error {
+	decoder := json.NewDecoder(r)
+	if EnableDecoderUseNumber {
+		decoder.UseNumber()
+	}
+	if err := decoder.Decode(obj); err != nil {
+		return err
+	}
+	return validate(obj)
+}
+
+```
+
+这里的validate:
+
+```
+func validate(obj interface{}) error {
+	if Validator == nil {
+		return nil
+	}
+	return Validator.ValidateStruct(obj)
+}
+
+var Validator StructValidator = &defaultValidator{}
+
+```
+
+调用了一个全局的defaultValidator:
+
+```
+type defaultValidator struct {
+	once     sync.Once
+	validate *validator.Validate
+}
+```
+这里的defaultValidator的ValidateStruct()最终调用的就是validator.v8包的Stuct方法
+```
+func (v *defaultValidator) ValidateStruct(obj interface{}) error {
+...
+		if err := v.validate.Struct(obj); err != nil {
+			return err
+		}
+...
+}
+```
+
+同样的，gin为了不让Validator绑死在validator.v8上，这个default的Validator不是写死是validator.v8的结构，而是自己定义了一个接口：
+```
+type StructValidator interface {
+
+	ValidateStruct(interface{}) error
+
+	Engine() interface{}
+}
+```
+如果你想用其他的validator，或者自定义一个validator，那么只要实现了这个接口，就可以把它赋值到Validator就可以了。
+
+这种用接口隔离第三方库的方式确实很巧妙。
+
+# Logger中间件
+
+既然有中间件机制，我们可以定义几个默认的中间件，日志Logger()是一个必要的中间件。
+
+这个Logger中间件的作用是记录下每个请求的请求地址，请求时长等：
+
+```
+[GIN] 2018/09/18 - 11:37:32 | 200 |     413.536µs |             ::1 | GET      /index
+```
+
+具体实现追下去看就明白了，请求前设置开始时间，请求后设置结束时间，然后打印信息。
+
+# Recovery中间件
+
+Recovery也是一个必要的中间件，试想一下，如果某个业务逻辑出现panic请求，难道整个http server就挂了？这是不允许的。所以这个Recovery做的事情是捕获请求中的panic信息，吧信息打印到日志中。
+
+```
+func RecoveryWithWriter(out io.Writer) HandlerFunc {
+	var logger *log.Logger
+	if out != nil {
+		logger = log.New(out, "\n\n\x1b[31m", log.LstdFlags)
+	}
+	return func(c *Context) {
+		defer func() {
+			if err := recover(); err != nil {
+				if logger != nil {
+					stack := stack(3)
+					httprequest, _ := httputil.DumpRequest(c.Request, false)
+					logger.Printf("[Recovery] %s panic recovered:\n%s\n%s\n%s%s", timeFormat(time.Now()), string(httprequest), err, stack, reset)
+				}
+				c.AbortWithStatus(http.StatusInternalServerError)
+			}
+		}()
+		c.Next()
+	}
+}
+```
+
+logger和Recovery这两个中间件在生成默认的Engine的时候已经加上了。
+```
+func Default() *Engine {
+	debugPrintWARNINGDefault()
+	engine := New()
+	engine.Use(Logger(), Recovery())
+	return engine
+}
+```
+
+# 总结
+
+gin是个很精致的框架，它的路由，参数绑定，中间件等逻辑使用非常方便，扩展性也是设计的非常好，没有多余的耦合。

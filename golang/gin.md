@@ -144,13 +144,24 @@ func (c *Context) reset() {
 }
 ```
 
-content就是某个请求的上下文结构，这个结构当然是可以不断new的，但是new这个对象的代价可以使用一个对象池进行服用，节省对象频繁创建和销毁的开销。golang中的sync.Pool就是用于这个用途的。需要注意的是，这里的对象池并不是所谓的固定对象池，而是临时对象池，里面的对象个数不能指定，对象存储时间也不能指定，只是增加了对象复用的概率而已。
+context就是某个请求的上下文结构，这个结构当然是可以不断new的，但是new这个对象的代价可以使用一个对象池进行服用，节省对象频繁创建和销毁的开销。golang中的sync.Pool就是用于这个用途的。需要注意的是，这里的对象池并不是所谓的固定对象池，而是临时对象池，里面的对象个数不能指定，对象存储时间也不能指定，只是增加了对象复用的概率而已。
 
 ```
 type Engine struct {
   ...
 	pool             sync.Pool
   ...
+}
+
+func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	c := engine.pool.Get().(*Context)
+	c.writermem.reset(w)
+	c.Request = req
+	c.reset()
+
+	engine.handleHTTPRequest(c)
+
+	engine.pool.Put(c)
 }
 ```
 

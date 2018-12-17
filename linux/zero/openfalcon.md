@@ -28,4 +28,6 @@ systemctl restart firewalld.service
 进入后最开始只能看到本机
 ![](http://tuchuang.funaio.cn/18-11-13/21279886.jpg)
 
-# 系统监控
+# 如何做监控
+
+监控分为三个层级，首先是系统监控，其次是

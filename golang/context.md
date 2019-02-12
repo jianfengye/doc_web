@@ -1,4 +1,4 @@
-# golang中的Context的使用场景
+# golang中的Context的使用场景[未发布]
 
 context在Go1.7之后就进入标准库中了。它主要的用处如果用一句话来说，是在于控制goroutine的生命周期。当一个计算任务被goroutine承接了之后，由于某种原因（超时，或者强制退出）我们希望中止这个goroutine的计算任务，那么就用得到这个Context了。
 

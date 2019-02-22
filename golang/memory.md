@@ -1,4 +1,4 @@
-# 内存分配
+# go的内存分配
 
 new一个对象的时候，入口函数是malloc.go中的newobject函数
 

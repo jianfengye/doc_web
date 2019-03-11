@@ -1,4 +1,4 @@
-# golang的cms[未发布]
+# golang的cms
 
 # 说说cms
 

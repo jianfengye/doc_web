@@ -1,4 +1,4 @@
-# go get golang.org被墙问题[未发布]
+# go get golang.org被墙问题解决
 
 今天在下载golang.org/x/image/tiff的时候出错
 ```
@@ -76,6 +76,10 @@ session的http_proxy是关闭session之后会取消的。
 ```
 git config --global --unset http.proxy
 ```
+
+# 后记
+
+据说现在有
 
 # 参考文档
 [git 设置和取消代理](https://gist.github.com/laispace/666dd7b27e9116faece6)

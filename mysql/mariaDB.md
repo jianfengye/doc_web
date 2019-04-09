@@ -1,4 +1,4 @@
-# mariaDB vs mysql（未发布）
+# mariaDB vs mysql
 
 今天遇到一个库使用的是mariaDB的数据库版本
 ```
@@ -27,7 +27,7 @@ mariaDB的可以看作是mysql的超集。mysql有的特性mariaDB都有，但�
 比如：
 
 ```
-EATE TABLE bird_sightings
+CREATE TABLE bird_sightings
 (
     sighting_id INT AUTO_INCREMENT KEY,
     human_id INT,

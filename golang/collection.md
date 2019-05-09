@@ -1,4 +1,6 @@
-# 一个让业务开发效率高10倍的golang库
+# 一个让业务开发效率提高10倍的golang库
+
+此文除了是标题党，没有什么其他问题。
 
 这篇文章推荐一个库，https://github.com/jianfengye/collection。 这个库是我在开发业务过程中 Slice 的频繁导致业务开发效率低，就产生了要做一个 Collection 包的想法。本文说说我开发这个库的前因后果
 

@@ -8,12 +8,6 @@
 
 * 让你实现一个数据库中间件，需要支持分库分表，慢sql查询，你会怎么做？
 
-* 你能实现一个ORM么？你会如何实现？
-
-* 大家看过的觉得很良心很经典的编程书籍有哪些？
-
-* 你了解DDD么？使用它设计系统有什么优势，如何实践？
-
 * 说说grpc，你项目过程中使用了么？是怎么使用的？
 
 * Pipeline管道模型有什么应用场景？
@@ -28,15 +22,11 @@
 
 * 聊聊垃圾回收机制，你使用的语言是使用什么垃圾回收机制？
 
-* 说说你对依赖注入的理解？
-
 * 范型是什么？它有什么好处？说说你对范型的理解。
 
 * 深拷贝和浅拷贝，如何实现深拷贝？
 
 * 说说mysql的B+树的特性，以及mysql的插入，删除对B+树的具体操作？
-
-* 什么会导致线程阻塞？
 
 * go中多goroutine有几种方式进行数据同步？
 
@@ -48,18 +38,20 @@
 
 * MVC MVP MVVM原理和区别
 
-* 谈谈你对WebSocket的理解
-
 * 聊聊HTTP2.0
 
 * 如何实现一个json解析器？
 
 * 聊聊职业规划，告诉新人在职场最需要记住的三点是什么？
 
-* 跳槽的时候，你最看重公司的什么？
-
-* 介绍一个你印象最深的项目
-
-* 你的项目在使用阿里云过程中遇到过什么坑？
-
 * 什么样的代码会导致内存泄漏？如何检测和定位项目是否有内存泄漏？
+
+* 微服务治理的方法
+
+* postgres 有哪些优点？
+PostgreSQL 与 MySQL 相比，优势何在？ https://www.zhihu.com/question/20010554
+Instagram 说明用 PostgreSQL 的五个优点？ http://developer.51cto.com/art/201401/426182.htm
+PostgreSQL 与 MySQL 相比，优势何在？https://blog.csdn.net/xuezhangjun0121/article/details/84967493
+PostgreSQL新手入门 http://www.ruanyifeng.com/blog/2013/12/getting_started_with_postgresql.html
+
+

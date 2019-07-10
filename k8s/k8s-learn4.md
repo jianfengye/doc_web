@@ -4,7 +4,7 @@
 
 不过我们看官网：
 
-![rc-note](images/2019/07/rc-note.png)
+![rc-note](/images/2019/07/rc-note.png)
 
 这里告诉我们，ReplicationController 现在已经过时了，现在建议使用 Deployment 配合ReplicaSet。ReplicationController的主要功能是保证Pod的数量、健康，弹性收缩等。但是Deployment除了有这些功能之外，还增加了回滚功能（当升级 pod 镜像或者相关参数的时候，如果有错误，可以回滚到上一个稳定版本），版本记录（每一次对 Deployment 的操作都能保存下来）。暂停和启动（升级的时候，能随时暂停和启动）。
 

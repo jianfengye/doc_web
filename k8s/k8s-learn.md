@@ -53,6 +53,6 @@ v1
 
 我们后续在yaml中写的apiVerison就是这个版本意思。
 
-那这些版本的api怎么调用呢？官方使用swagger对接口进行管理和说明，首先我们可以启动`kubectl proxy` 来启动k8s server的http代理。默认打开地址是`http://127.0.0.1:8001/`。使用`http://127.0.0.1:8001/swagger.json` 就可以看到k8s的全部api说明了。如果你有swagger-editor的话，你还可以把这个json放到editor里面，就能看到所有的接口了。（接口特别多，加载比较慢）![k8s-swagger](images/2019/07/k8s-swagger.png)。
+那这些版本的api怎么调用呢？官方使用swagger对接口进行管理和说明，首先我们可以启动`kubectl proxy` 来启动k8s server的http代理。默认打开地址是`http://127.0.0.1:8001/`。使用`http://127.0.0.1:8001/swagger.json` 就可以看到k8s的全部api说明了。如果你有swagger-editor的话，你还可以把这个json放到editor里面，就能看到所有的接口了。（接口特别多，加载比较慢）![k8s-swagger](/images/2019/07/k8s-swagger.png)。
 
 现在有了k8s接口，我们完全可以自己写一个客户端来调用。[客户端库](https://k8smeetup.github.io/docs/reference/client-libraries/)。但是我们最常用的客户端命令是kubectl。

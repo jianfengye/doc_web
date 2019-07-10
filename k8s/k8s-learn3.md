@@ -236,7 +236,7 @@ ca.crt	namespace  token
 
 pod 的状态一共有五种，挂起/运行中/成功/失败/未知。
 
-![pod-cycle](images/2019/07/pod-cycle.png)
+![pod-cycle](/images/2019/07/pod-cycle.png)
 
 
 前一节说node上有个进程 kubelet 会检测当前 node 上的 pod 是否存活，如果检测到容器的状态为失败，那么就会启动重启策略，这个重启策略就是这里 restartPolicy 设置的。
@@ -246,7 +246,7 @@ pod 的状态一共有五种，挂起/运行中/成功/失败/未知。
 * Never： 不重启
 
 这里提到一个退出码，如果这个pod是处于失败状态，那么通过 `kubectl describe pod` 也是能看到 pod 的退出状态的。这个退出码0为正常，非0是不正常。
-![exitcode](images/2019/07/exitcode.png)
+![exitcode](/images/2019/07/exitcode.png)
 
 ## schedulerName
 

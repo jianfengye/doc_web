@@ -13,7 +13,7 @@ kubectl get rs frontend-5c548f4769 -o=yaml
 apiVersion: extensions/v1beta1
 kind: ReplicaSet
 metadata:
-  annotations:
+annotations:
     deployment.kubernetes.io/desired-replicas: "3"
     deployment.kubernetes.io/max-replicas: "4"
     deployment.kubernetes.io/revision: "1"

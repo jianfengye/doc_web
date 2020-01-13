@@ -336,4 +336,4 @@ Casbin 支持的权限模型有：
 * 优先级: 策略规则按照先后次序确定优先级，类似于防火墙规则。
 
 
-https://casbin.org/docs/zh-CN/supported-models
+我们可以通过这个页面上的链接看每个权限模型的配置：https://casbin.org/docs/zh-CN/supported-models

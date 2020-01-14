@@ -337,3 +337,20 @@ Casbin 支持的权限模型有：
 
 
 我们可以通过这个页面上的链接看每个权限模型的配置：https://casbin.org/docs/zh-CN/supported-models
+
+
+# 源码阅读
+
+我们阅读的是 v2.1.2版本
+源码地址：https://github.com/casbin/casbin 。
+注释版地址：https://github.com/jianfengye/inside-go/tree/master/casbin-2.1.2。
+
+按照大象装进冰箱的逻辑，我们也很容易想象得到 casbin 应该分为几个步骤：
+
+1 加载 model 的配置
+2 加载 policy 的配置
+3 具体请求进来之后，和 model 和 policy 进行匹配判断。
+
+确实也就是这么写的。
+
+我们从

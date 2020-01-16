@@ -1,4 +1,4 @@
-# casbin源码分析
+# Golang最强大的访问控制框架casbin全解析 
 
 Casbin是一个强大的、高效的开源访问控制框架，其权限管理机制支持多种访问控制模型。目前这个框架的生态已经发展的越来越好了。提供了各种语言的类库，自定义的权限模型语言，以及模型编辑器。在各种语言中，golang的支持还是最全的，所以我们就研究casbin的golang实现。
 
@@ -351,6 +351,83 @@ Casbin 支持的权限模型有：
 2 加载 policy 的配置
 3 具体请求进来之后，和 model 和 policy 进行匹配判断。
 
-确实也就是这么写的。
+确实源码也就是这么写的。
 
-我们从
+整个 casbin 最核心的结构是 
+```
+// Enforcer是权限验证的主体
+type Enforcer struct {
+	modelPath string            // model文件地址
+	model     model.Model       // model结构
+	fm        model.FunctionMap // 自定义函数
+	eft       effect.Effector   // effecter的逻辑
+
+	adapter persist.Adapter // 持久化的Adapter，就是police的Adapter
+	watcher persist.Watcher
+	rm      rbac.RoleManager // 这个要是这个模型是rbac(根据是否有g判断)，就增加这个角色管理器
+
+	enabled            bool // 这个Enforcer的开关
+	autoSave           bool // 如果调用了api修改的Policy，是否自动保存到Adapter中
+	autoBuildRoleLinks bool
+}
+```
+
+所有加载的 model 和 policy 都是丰富这个结构体。
+
+比如： 
+```
+func (e *Enforcer) LoadModel() error
+```
+或者
+```
+func (e *Enforcer) LoadPolicy() error
+```
+
+里面的逻辑就不细说了，可以去看 https://github.com/jianfengye/inside-go/tree/master/casbin-2.1.2 看这个的源码注释。我就说几个我觉得这个项目代码值得学习或者比较特别的点。
+
+## 代码依赖少
+
+这个项目的 config， log 都是自己从标准库从头开始写的。我认为，作者一开始对项目就定位很清晰，这个是一个基础类库，能依赖尽可能少的项目就依赖尽可能少的项目。
+
+## 文件夹及文件定义很明确
+
+casbin 的文件夹结构并不是扁平的，而是树形结构，基本上是两层，甚至用到了三层。我个人觉得一个小的类库倒是没有必要分割这么多文件夹，很容易让人感觉很复杂。不过在 casbin 这个项目中，文件夹分割的还是比较清晰的。基本上是顺着 enforcer 这个结构体的定义，在涉及到需要扩展的字段的时候就起一个文件夹。每个扩展的文件夹基本都是 interface + implement 的方式。比如 enforcer 中有个 adapter 字段，使用了persist文件夹进行接口的定义和实现。
+
+文件的定义也很清晰。比如 enforcer_interface 定义了80多个接口，在一个文件中全部实现并不是很好的写法，它就分成了同一个文件夹下的几个文件来写（internal_api, rbac_api, management_api，rbac_api_with_domain）。这样不仅减少了代码的长度，还使用文件名称把接口进行了分类。
+
+## 基于 enforcer 扩展了 CacheEnforcer 和 SyncedEnforcer
+
+我们写 enforcer 可能会想到是否需要缓存，是否配置变化能及时更新，这里使用了一个父类和两个子类的方式来实现。把是否使用缓存，是否使用配置的选择权交给用户。而不是简单在一个结构体里面塞上这些功能。
+
+## 先定义接口
+
+基本上每个可以扩展的结构都考虑到使用接口进行定义。定义接口扩展性提高了，且可以更加丰富了。
+
+## adapter
+
+我觉得 persist/adapter 里面这个写法挺好的。
+
+首先它定义了 adapter 这个接口，让实现接口的类来具体实现我从哪个持久化存储里面读取配置文件，但是希望每一行都有统一的读取规则，所以它就把 adapter 接口和 LoadPolicyLine 方法放同一个文件里面。
+
+其次继承结构：
+![adapter](http://tuchuang.funaio.cn/WX20200116-101409@2x.png)
+它实现了接口的继承，filterdApapter 接口继承 Adapter，file-filterdAdapter继承了file-Adapter。
+
+如果我们写，有可能就简单定义了一个 filterLine 的函数，它这里更近一步，可以直接设置根据 p 或者 g 的某个字段进行过滤。
+
+```
+if err := e.LoadFilteredPolicy(&fileadapter.Filter{
+    P: []string{"", "domain1"},
+    G: []string{"", "", "domain1"},
+}); err != nil {
+    t.Errorf("unexpected error in LoadFilteredPolicy: %v", err)
+}
+```
+
+使用起来就大大方便了。
+
+# 总结
+
+casbin 项目最核心的一定是那篇 PML 的论文。基于理论论文发展出来的这个项目也是非常牛X的。casbin 应该能满足大多数的权限管理系统的要求了。如果 casbin 不能实现你的权限需求的话，我觉得应该先思考下，产品经理提出的需求是不是靠谱的。。。哈哈哈
+
+

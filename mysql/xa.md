@@ -89,7 +89,7 @@ mysql里面也提供了分布式事务的语句XA。
 
 思考不如实操，于是我用golang写了一个使用mysql的事务实现的“两阶段提交”:
 
-```
+```go
 package main
 
 import (
@@ -199,7 +199,7 @@ func main() {
 那么还要回归到2PC，mysql为2PC的实现增加了xa命令，那么使用这个命令我们能不能避免这个问题呢？
 
 同样，我用golang写了一个使用xa命令的代码
-```
+```go
 package main
 
 import (
@@ -333,7 +333,7 @@ func main() {
 
 我们把这个代码的rollback去掉，假设commit必须成功。
 
-```
+```go
 package main
 
 import (
@@ -455,7 +455,7 @@ func main() {
 
 所以呢，我琢磨了一下，我们写xa的代码应该如下：
 
-```
+```go
 package main
 
 import (

@@ -6,7 +6,7 @@
 # 场景重现
 
 比如我们现在有两个数据库，mysql3306和mysql3307。这里我们使用docker来创建这两个实例：
-```
+```bash
 # mysql3306创建命令
 docker run -d -p 3306:3306 -v /Users/yjf/Documents/workspace/mysql-docker/my3306.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf -v /Users/yjf/Documents/workspace/mysql-docker/data3306:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=123456 --name mysql-3307 mysql:5.7
 
@@ -37,7 +37,7 @@ expire_logs_days = 30
 
 在mysql3306中
 我们有一个user表
-```
+```sql
 create table user (
     id int,
     name varchar(10),
@@ -50,7 +50,7 @@ insert into user values(1, "foo", 10)
 
 在mysql3307中，我们有一个wallet表。
 
-```
+```sql
 create table wallet (
     id int,
     money float 

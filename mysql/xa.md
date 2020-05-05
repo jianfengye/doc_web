@@ -6,15 +6,15 @@
 # 场景重现
 
 比如我们现在有两个数据库，mysql3306和mysql3307。这里我们使用docker来创建这两个实例：
-```
+```bash
 # mysql3306创建命令
 docker run -d -p 3306:3306 -v /Users/yjf/Documents/workspace/mysql-docker/my3306.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf -v /Users/yjf/Documents/workspace/mysql-docker/data3306:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=123456 --name mysql-3307 mysql:5.7
 
 # msyql3306的配置：
 [mysqld]
-pid-file	= /var/run/mysqld/mysqld.pid
-socket		= /var/run/mysqld/mysqld.sock
-datadir		= /var/lib/mysql
+pid-file     = /var/run/mysqld/mysqld.pid
+socket          = /var/run/mysqld/mysqld.sock
+datadir          = /var/lib/mysql
 server-id = 1
 log_bin = mysql-bin
 binlog_format = ROW
@@ -25,9 +25,9 @@ docker run -d -p 3307:3306 -v /Users/yjf/Documents/workspace/mysql-docker/my3307
 
 # msyql3307的配置：
 [mysqld]
-pid-file	= /var/run/mysqld/mysqld.pid
-socket		= /var/run/mysqld/mysqld.sock
-datadir		= /var/lib/mysql
+pid-file     = /var/run/mysqld/mysqld.pid
+socket          = /var/run/mysqld/mysqld.sock
+datadir          = /var/lib/mysql
 server-id = 2
 log_bin = mysql-bin
 binlog_format = ROW
@@ -37,7 +37,7 @@ expire_logs_days = 30
 
 在mysql3306中
 我们有一个user表
-```
+```sql
 create table user (
     id int,
     name varchar(10),
@@ -50,7 +50,7 @@ insert into user values(1, "foo", 10)
 
 在mysql3307中，我们有一个wallet表。
 
-```
+```sql
 create table wallet (
     id int,
     money float 
@@ -89,93 +89,93 @@ mysql里面也提供了分布式事务的语句XA。
 
 思考不如实操，于是我用golang写了一个使用mysql的事务实现的“两阶段提交”:
 
-```
+```go
 package main
 
 import (
-	"database/sql"
-	"fmt"
+     "database/sql"
+     "fmt"
 
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/pkg/errors"
+     _ "github.com/go-sql-driver/mysql"
+     "github.com/pkg/errors"
 )
 
 func main() {
-	var err error
+     var err error
 
-	// db1的连接
-	db1, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/hade1")
-	if err != nil {
-		panic(err.Error())
-	}
-	defer db1.Close()
+     // db1的连接
+     db1, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/hade1")
+     if err != nil {
+          panic(err.Error())
+     }
+     defer db1.Close()
 
-	// db2的连接
-	db2, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3307)/hade2")
-	if err != nil {
-		panic(err.Error())
-	}
-	defer db2.Close()
+     // db2的连接
+     db2, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3307)/hade2")
+     if err != nil {
+          panic(err.Error())
+     }
+     defer db2.Close()
 
-	// 开始前显示
-	var score int
-	db1.QueryRow("select score from user where id = 1").Scan(&score)
-	fmt.Println("user1 score:", score)
-	var money float64
-	db2.QueryRow("select money from wallet where id = 1").Scan(&money)
-	fmt.Println("wallet1 money:", money)
+     // 开始前显示
+     var score int
+     db1.QueryRow("select score from user where id = 1").Scan(&score)
+     fmt.Println("user1 score:", score)
+     var money float64
+     db2.QueryRow("select money from wallet where id = 1").Scan(&money)
+     fmt.Println("wallet1 money:", money)
 
-	tx1, err := db1.Begin()
-	if err != nil {
-		panic(errors.WithStack(err))
-	}
-	tx2, err := db2.Begin()
-	if err != nil {
-		panic(errors.WithStack(err))
-	}
+     tx1, err := db1.Begin()
+     if err != nil {
+          panic(errors.WithStack(err))
+     }
+     tx2, err := db2.Begin()
+     if err != nil {
+          panic(errors.WithStack(err))
+     }
 
-	defer func() {
-		if err := recover(); err != nil {
-			fmt.Printf("%+v\n", err)
-			fmt.Println("=== call rollback ====")
-			tx1.Rollback()
-			tx2.Rollback()
-		}
+     defer func() {
+          if err := recover(); err != nil {
+               fmt.Printf("%+v\n", err)
+               fmt.Println("=== call rollback ====")
+               tx1.Rollback()
+               tx2.Rollback()
+          }
 
-		db1.QueryRow("select score from user where id = 1").Scan(&score)
-		fmt.Println("user1 score:", score)
-		db2.QueryRow("select money from wallet where id = 1").Scan(&money)
-		fmt.Println("wallet1 money:", money)
-	}()
+          db1.QueryRow("select score from user where id = 1").Scan(&score)
+          fmt.Println("user1 score:", score)
+          db2.QueryRow("select money from wallet where id = 1").Scan(&money)
+          fmt.Println("wallet1 money:", money)
+     }()
 
-	// DML操作
-	if _, err = tx1.Exec("update user set score=score+2 where id =1"); err != nil {
-		panic(errors.WithStack(err))
-	}
-	if _, err = tx2.Exec("update wallet set money=money+1.2 where id=1"); err != nil {
-		panic(errors.WithStack(err))
-	}
+     // DML操作
+     if _, err = tx1.Exec("update user set score=score+2 where id =1"); err != nil {
+          panic(errors.WithStack(err))
+     }
+     if _, err = tx2.Exec("update wallet set money=money+1.2 where id=1"); err != nil {
+          panic(errors.WithStack(err))
+     }
 
     // panic(errors.New("commit before error"))
 
-	// commit
-	fmt.Println("=== call commit ====")
-	err = tx1.Commit()
-	if err != nil {
-		panic(errors.WithStack(err))
-	}
+     // commit
+     fmt.Println("=== call commit ====")
+     err = tx1.Commit()
+     if err != nil {
+          panic(errors.WithStack(err))
+     }
 
     // panic(errors.New("commit db2 before error"))
 
-	err = tx2.Commit()
-	if err != nil {
-		panic(errors.WithStack(err))
-	}
+     err = tx2.Commit()
+     if err != nil {
+          panic(errors.WithStack(err))
+     }
 
-	db1.QueryRow("select score from user where id = 1").Scan(&score)
-	fmt.Println("user1 score:", score)
-	db2.QueryRow("select money from wallet where id = 1").Scan(&money)
-	fmt.Println("wallet1 money:", money)
+     db1.QueryRow("select score from user where id = 1").Scan(&score)
+     fmt.Println("user1 score:", score)
+     db2.QueryRow("select money from wallet where id = 1").Scan(&money)
+     fmt.Println("wallet1 money:", money)
 }
 
 ```
@@ -199,111 +199,111 @@ func main() {
 那么还要回归到2PC，mysql为2PC的实现增加了xa命令，那么使用这个命令我们能不能避免这个问题呢？
 
 同样，我用golang写了一个使用xa命令的代码
-```
+```go
 package main
 
 import (
-	"database/sql"
-	"fmt"
-	"strconv"
-	"time"
+     "database/sql"
+     "fmt"
+     "strconv"
+     "time"
 
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/pkg/errors"
+     _ "github.com/go-sql-driver/mysql"
+     "github.com/pkg/errors"
 )
 
 func main() {
-	var err error
+     var err error
 
-	// db1的连接
-	db1, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/hade1")
-	if err != nil {
-		panic(err.Error())
-	}
-	defer db1.Close()
+     // db1的连接
+     db1, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/hade1")
+     if err != nil {
+          panic(err.Error())
+     }
+     defer db1.Close()
 
-	// db2的连接
-	db2, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3307)/hade2")
-	if err != nil {
-		panic(err.Error())
-	}
-	defer db2.Close()
+     // db2的连接
+     db2, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3307)/hade2")
+     if err != nil {
+          panic(err.Error())
+     }
+     defer db2.Close()
 
-	// 开始前显示
-	var score int
-	db1.QueryRow("select score from user where id = 1").Scan(&score)
-	fmt.Println("user1 score:", score)
-	var money float64
-	db2.QueryRow("select money from wallet where id = 1").Scan(&money)
-	fmt.Println("wallet1 money:", money)
+     // 开始前显示
+     var score int
+     db1.QueryRow("select score from user where id = 1").Scan(&score)
+     fmt.Println("user1 score:", score)
+     var money float64
+     db2.QueryRow("select money from wallet where id = 1").Scan(&money)
+     fmt.Println("wallet1 money:", money)
 
-	// 生成xid
-	xid := strconv.FormatInt(time.Now().Unix(), 10)
-	fmt.Println("=== xid:" + xid + " ====")
-	defer func() {
-		if err := recover(); err != nil {
-			fmt.Printf("%+v\n", err)
-			fmt.Println("=== call rollback ====")
-			db1.Exec(fmt.Sprintf("XA ROLLBACK '%s'", xid))
-			db2.Exec(fmt.Sprintf("XA ROLLBACK '%s'", xid))
-		}
+     // 生成xid
+     xid := strconv.FormatInt(time.Now().Unix(), 10)
+     fmt.Println("=== xid:" + xid + " ====")
+     defer func() {
+          if err := recover(); err != nil {
+               fmt.Printf("%+v\n", err)
+               fmt.Println("=== call rollback ====")
+               db1.Exec(fmt.Sprintf("XA ROLLBACK '%s'", xid))
+               db2.Exec(fmt.Sprintf("XA ROLLBACK '%s'", xid))
+          }
 
-		db1.QueryRow("select score from user where id = 1").Scan(&score)
-		fmt.Println("user1 score:", score)
-		db2.QueryRow("select money from wallet where id = 1").Scan(&money)
-		fmt.Println("wallet1 money:", money)
-	}()
+          db1.QueryRow("select score from user where id = 1").Scan(&score)
+          fmt.Println("user1 score:", score)
+          db2.QueryRow("select money from wallet where id = 1").Scan(&money)
+          fmt.Println("wallet1 money:", money)
+     }()
 
-	// XA 启动
-	fmt.Println("=== call start ====")
-	if _, err = db1.Exec(fmt.Sprintf("XA START '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
-	if _, err = db2.Exec(fmt.Sprintf("XA START '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
+     // XA 启动
+     fmt.Println("=== call start ====")
+     if _, err = db1.Exec(fmt.Sprintf("XA START '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
+     if _, err = db2.Exec(fmt.Sprintf("XA START '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
 
-	// DML操作
-	if _, err = db1.Exec("update user set score=score+2 where id =1"); err != nil {
-		panic(errors.WithStack(err))
-	}
-	if _, err = db2.Exec("update wallet set money=money+1.2 where id=1"); err != nil {
-		panic(errors.WithStack(err))
-	}
+     // DML操作
+     if _, err = db1.Exec("update user set score=score+2 where id =1"); err != nil {
+          panic(errors.WithStack(err))
+     }
+     if _, err = db2.Exec("update wallet set money=money+1.2 where id=1"); err != nil {
+          panic(errors.WithStack(err))
+     }
 
-	// XA end
-	fmt.Println("=== call end ====")
-	if _, err = db1.Exec(fmt.Sprintf("XA END '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
-	if _, err = db2.Exec(fmt.Sprintf("XA END '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
+     // XA end
+     fmt.Println("=== call end ====")
+     if _, err = db1.Exec(fmt.Sprintf("XA END '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
+     if _, err = db2.Exec(fmt.Sprintf("XA END '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
 
-	// prepare
-	fmt.Println("=== call prepare ====")
-	if _, err = db1.Exec(fmt.Sprintf("XA PREPARE '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
-	// panic(errors.New("db2 prepare error"))
-	if _, err = db2.Exec(fmt.Sprintf("XA PREPARE '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
+     // prepare
+     fmt.Println("=== call prepare ====")
+     if _, err = db1.Exec(fmt.Sprintf("XA PREPARE '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
+     // panic(errors.New("db2 prepare error"))
+     if _, err = db2.Exec(fmt.Sprintf("XA PREPARE '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
 
-	// commit
-	fmt.Println("=== call commit ====")
-	if _, err = db1.Exec(fmt.Sprintf("XA COMMIT '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
-	// panic(errors.New("db2 commit error"))
-	if _, err = db2.Exec(fmt.Sprintf("XA COMMIT '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
+     // commit
+     fmt.Println("=== call commit ====")
+     if _, err = db1.Exec(fmt.Sprintf("XA COMMIT '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
+     // panic(errors.New("db2 commit error"))
+     if _, err = db2.Exec(fmt.Sprintf("XA COMMIT '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
 
-	db1.QueryRow("select score from user where id = 1").Scan(&score)
-	fmt.Println("user1 score:", score)
-	db2.QueryRow("select money from wallet where id = 1").Scan(&money)
-	fmt.Println("wallet1 money:", money)
+     db1.QueryRow("select score from user where id = 1").Scan(&score)
+     fmt.Println("user1 score:", score)
+     db2.QueryRow("select money from wallet where id = 1").Scan(&money)
+     fmt.Println("wallet1 money:", money)
 }
 
 ```
@@ -333,111 +333,111 @@ func main() {
 
 我们把这个代码的rollback去掉，假设commit必须成功。
 
-```
+```go
 package main
 
 import (
-	"database/sql"
-	"fmt"
-	"strconv"
-	"time"
+     "database/sql"
+     "fmt"
+     "strconv"
+     "time"
 
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/pkg/errors"
+     _ "github.com/go-sql-driver/mysql"
+     "github.com/pkg/errors"
 )
 
 func main() {
-	var err error
+     var err error
 
-	// db1的连接
-	db1, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/hade1")
-	if err != nil {
-		panic(err.Error())
-	}
-	defer db1.Close()
+     // db1的连接
+     db1, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/hade1")
+     if err != nil {
+          panic(err.Error())
+     }
+     defer db1.Close()
 
-	// db2的连接
-	db2, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3307)/hade2")
-	if err != nil {
-		panic(err.Error())
-	}
-	defer db2.Close()
+     // db2的连接
+     db2, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3307)/hade2")
+     if err != nil {
+          panic(err.Error())
+     }
+     defer db2.Close()
 
-	// 开始前显示
-	var score int
-	db1.QueryRow("select score from user where id = 1").Scan(&score)
-	fmt.Println("user1 score:", score)
-	var money float64
-	db2.QueryRow("select money from wallet where id = 1").Scan(&money)
-	fmt.Println("wallet1 money:", money)
+     // 开始前显示
+     var score int
+     db1.QueryRow("select score from user where id = 1").Scan(&score)
+     fmt.Println("user1 score:", score)
+     var money float64
+     db2.QueryRow("select money from wallet where id = 1").Scan(&money)
+     fmt.Println("wallet1 money:", money)
 
-	// 生成xid
-	xid := strconv.FormatInt(time.Now().Unix(), 10)
-	fmt.Println("=== xid:" + xid + " ====")
-	defer func() {
-		if err := recover(); err != nil {
-			fmt.Printf("%+v\n", err)
-			fmt.Println("=== call rollback ====")
-			// db1.Exec(fmt.Sprintf("XA ROLLBACK '%s'", xid))
-			// db2.Exec(fmt.Sprintf("XA ROLLBACK '%s'", xid))
-		}
+     // 生成xid
+     xid := strconv.FormatInt(time.Now().Unix(), 10)
+     fmt.Println("=== xid:" + xid + " ====")
+     defer func() {
+          if err := recover(); err != nil {
+               fmt.Printf("%+v\n", err)
+               fmt.Println("=== call rollback ====")
+               // db1.Exec(fmt.Sprintf("XA ROLLBACK '%s'", xid))
+               // db2.Exec(fmt.Sprintf("XA ROLLBACK '%s'", xid))
+          }
 
-		db1.QueryRow("select score from user where id = 1").Scan(&score)
-		fmt.Println("user1 score:", score)
-		db2.QueryRow("select money from wallet where id = 1").Scan(&money)
-		fmt.Println("wallet1 money:", money)
-	}()
+          db1.QueryRow("select score from user where id = 1").Scan(&score)
+          fmt.Println("user1 score:", score)
+          db2.QueryRow("select money from wallet where id = 1").Scan(&money)
+          fmt.Println("wallet1 money:", money)
+     }()
 
-	// XA 启动
-	fmt.Println("=== call start ====")
-	if _, err = db1.Exec(fmt.Sprintf("XA START '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
-	if _, err = db2.Exec(fmt.Sprintf("XA START '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
+     // XA 启动
+     fmt.Println("=== call start ====")
+     if _, err = db1.Exec(fmt.Sprintf("XA START '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
+     if _, err = db2.Exec(fmt.Sprintf("XA START '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
 
-	// DML操作
-	if _, err = db1.Exec("update user set score=score+2 where id =1"); err != nil {
-		panic(errors.WithStack(err))
-	}
-	if _, err = db2.Exec("update wallet set money=money+1.2 where id=1"); err != nil {
-		panic(errors.WithStack(err))
-	}
+     // DML操作
+     if _, err = db1.Exec("update user set score=score+2 where id =1"); err != nil {
+          panic(errors.WithStack(err))
+     }
+     if _, err = db2.Exec("update wallet set money=money+1.2 where id=1"); err != nil {
+          panic(errors.WithStack(err))
+     }
 
-	// XA end
-	fmt.Println("=== call end ====")
-	if _, err = db1.Exec(fmt.Sprintf("XA END '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
-	if _, err = db2.Exec(fmt.Sprintf("XA END '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
+     // XA end
+     fmt.Println("=== call end ====")
+     if _, err = db1.Exec(fmt.Sprintf("XA END '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
+     if _, err = db2.Exec(fmt.Sprintf("XA END '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
 
-	// prepare
-	fmt.Println("=== call prepare ====")
-	if _, err = db1.Exec(fmt.Sprintf("XA PREPARE '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
-	// panic(errors.New("db2 prepare error"))
-	if _, err = db2.Exec(fmt.Sprintf("XA PREPARE '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
+     // prepare
+     fmt.Println("=== call prepare ====")
+     if _, err = db1.Exec(fmt.Sprintf("XA PREPARE '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
+     // panic(errors.New("db2 prepare error"))
+     if _, err = db2.Exec(fmt.Sprintf("XA PREPARE '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
 
-	// commit
-	fmt.Println("=== call commit ====")
-	if _, err = db1.Exec(fmt.Sprintf("XA COMMIT '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
-	panic(errors.New("db2 commit error"))
-	if _, err = db2.Exec(fmt.Sprintf("XA COMMIT '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
+     // commit
+     fmt.Println("=== call commit ====")
+     if _, err = db1.Exec(fmt.Sprintf("XA COMMIT '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
+     panic(errors.New("db2 commit error"))
+     if _, err = db2.Exec(fmt.Sprintf("XA COMMIT '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
 
-	db1.QueryRow("select score from user where id = 1").Scan(&score)
-	fmt.Println("user1 score:", score)
-	db2.QueryRow("select money from wallet where id = 1").Scan(&money)
-	fmt.Println("wallet1 money:", money)
+     db1.QueryRow("select score from user where id = 1").Scan(&score)
+     fmt.Println("user1 score:", score)
+     db2.QueryRow("select money from wallet where id = 1").Scan(&money)
+     fmt.Println("wallet1 money:", money)
 }
 
 ```
@@ -455,114 +455,114 @@ func main() {
 
 所以呢，我琢磨了一下，我们写xa的代码应该如下：
 
-```
+```go
 package main
 
 import (
-	"database/sql"
-	"fmt"
-	"log"
-	"strconv"
-	"time"
+     "database/sql"
+     "fmt"
+     "log"
+     "strconv"
+     "time"
 
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/pkg/errors"
+     _ "github.com/go-sql-driver/mysql"
+     "github.com/pkg/errors"
 )
 
 func main() {
-	var err error
+     var err error
 
-	// db1的连接
-	db1, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/hade1")
-	if err != nil {
-		panic(err.Error())
-	}
-	defer db1.Close()
+     // db1的连接
+     db1, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/hade1")
+     if err != nil {
+          panic(err.Error())
+     }
+     defer db1.Close()
 
-	// db2的连接
-	db2, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3307)/hade2")
-	if err != nil {
-		panic(err.Error())
-	}
-	defer db2.Close()
+     // db2的连接
+     db2, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3307)/hade2")
+     if err != nil {
+          panic(err.Error())
+     }
+     defer db2.Close()
 
-	// 开始前显示
-	var score int
-	db1.QueryRow("select score from user where id = 1").Scan(&score)
-	fmt.Println("user1 score:", score)
-	var money float64
-	db2.QueryRow("select money from wallet where id = 1").Scan(&money)
-	fmt.Println("wallet1 money:", money)
+     // 开始前显示
+     var score int
+     db1.QueryRow("select score from user where id = 1").Scan(&score)
+     fmt.Println("user1 score:", score)
+     var money float64
+     db2.QueryRow("select money from wallet where id = 1").Scan(&money)
+     fmt.Println("wallet1 money:", money)
 
-	// 生成xid
-	xid := strconv.FormatInt(time.Now().Unix(), 10)
-	fmt.Println("=== xid:" + xid + " ====")
-	defer func() {
-		if err := recover(); err != nil {
-			fmt.Printf("%+v\n", err)
-			fmt.Println("=== call rollback ====")
-			db1.Exec(fmt.Sprintf("XA ROLLBACK '%s'", xid))
-			db2.Exec(fmt.Sprintf("XA ROLLBACK '%s'", xid))
-		}
+     // 生成xid
+     xid := strconv.FormatInt(time.Now().Unix(), 10)
+     fmt.Println("=== xid:" + xid + " ====")
+     defer func() {
+          if err := recover(); err != nil {
+               fmt.Printf("%+v\n", err)
+               fmt.Println("=== call rollback ====")
+               db1.Exec(fmt.Sprintf("XA ROLLBACK '%s'", xid))
+               db2.Exec(fmt.Sprintf("XA ROLLBACK '%s'", xid))
+          }
 
-		db1.QueryRow("select score from user where id = 1").Scan(&score)
-		fmt.Println("user1 score:", score)
-		db2.QueryRow("select money from wallet where id = 1").Scan(&money)
-		fmt.Println("wallet1 money:", money)
-	}()
+          db1.QueryRow("select score from user where id = 1").Scan(&score)
+          fmt.Println("user1 score:", score)
+          db2.QueryRow("select money from wallet where id = 1").Scan(&money)
+          fmt.Println("wallet1 money:", money)
+     }()
 
-	// XA 启动
-	fmt.Println("=== call start ====")
-	if _, err = db1.Exec(fmt.Sprintf("XA START '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
-	if _, err = db2.Exec(fmt.Sprintf("XA START '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
+     // XA 启动
+     fmt.Println("=== call start ====")
+     if _, err = db1.Exec(fmt.Sprintf("XA START '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
+     if _, err = db2.Exec(fmt.Sprintf("XA START '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
 
-	// DML操作
-	if _, err = db1.Exec("update user set score=score+2 where id =1"); err != nil {
-		panic(errors.WithStack(err))
-	}
-	if _, err = db2.Exec("update wallet set money=money+1.2 where id=1"); err != nil {
-		panic(errors.WithStack(err))
-	}
+     // DML操作
+     if _, err = db1.Exec("update user set score=score+2 where id =1"); err != nil {
+          panic(errors.WithStack(err))
+     }
+     if _, err = db2.Exec("update wallet set money=money+1.2 where id=1"); err != nil {
+          panic(errors.WithStack(err))
+     }
 
-	// XA end
-	fmt.Println("=== call end ====")
-	if _, err = db1.Exec(fmt.Sprintf("XA END '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
-	if _, err = db2.Exec(fmt.Sprintf("XA END '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
+     // XA end
+     fmt.Println("=== call end ====")
+     if _, err = db1.Exec(fmt.Sprintf("XA END '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
+     if _, err = db2.Exec(fmt.Sprintf("XA END '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
 
-	// prepare
-	fmt.Println("=== call prepare ====")
-	if _, err = db1.Exec(fmt.Sprintf("XA PREPARE '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
-	// panic(errors.New("db2 prepare error"))
-	if _, err = db2.Exec(fmt.Sprintf("XA PREPARE '%s'", xid)); err != nil {
-		panic(errors.WithStack(err))
-	}
+     // prepare
+     fmt.Println("=== call prepare ====")
+     if _, err = db1.Exec(fmt.Sprintf("XA PREPARE '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
+     // panic(errors.New("db2 prepare error"))
+     if _, err = db2.Exec(fmt.Sprintf("XA PREPARE '%s'", xid)); err != nil {
+          panic(errors.WithStack(err))
+     }
 
-	// commit
-	fmt.Println("=== call commit ====")
-	if _, err = db1.Exec(fmt.Sprintf("XA COMMIT '%s'", xid)); err != nil {
-		// TODO: 尝试重新提交COMMIT
-		// TODO: 如果还失败，记录xid，进入数据恢复逻辑，等待数据库恢复重新提交
-		log.Println("xid:" + xid)
-	}
-	// panic(errors.New("db2 commit error"))
-	if _, err = db2.Exec(fmt.Sprintf("XA COMMIT '%s'", xid)); err != nil {
-		log.Println("xid:" + xid)
-	}
+     // commit
+     fmt.Println("=== call commit ====")
+     if _, err = db1.Exec(fmt.Sprintf("XA COMMIT '%s'", xid)); err != nil {
+          // TODO: 尝试重新提交COMMIT
+          // TODO: 如果还失败，记录xid，进入数据恢复逻辑，等待数据库恢复重新提交
+          log.Println("xid:" + xid)
+     }
+     // panic(errors.New("db2 commit error"))
+     if _, err = db2.Exec(fmt.Sprintf("XA COMMIT '%s'", xid)); err != nil {
+          log.Println("xid:" + xid)
+     }
 
-	db1.QueryRow("select score from user where id = 1").Scan(&score)
-	fmt.Println("user1 score:", score)
-	db2.QueryRow("select money from wallet where id = 1").Scan(&money)
-	fmt.Println("wallet1 money:", money)
+     db1.QueryRow("select score from user where id = 1").Scan(&score)
+     fmt.Println("user1 score:", score)
+     db2.QueryRow("select money from wallet where id = 1").Scan(&money)
+     fmt.Println("wallet1 money:", money)
 }
 
 ```
